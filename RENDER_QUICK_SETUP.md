@@ -53,16 +53,17 @@ GENERIC_TIMEZONE=UTC
 ```bash
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-gmail-app-password
-SMTP_SENDER=your-email@gmail.com
+SMTP_USER=vaaraahicreations@gmail.com
+SMTP_PASS=Vedic@1212
+SMTP_SENDER=vaaraahicreations@gmail.com
 ```
 
 #### Ecommerce Integration:
 ```bash
-WOOCOMMERCE_URL=https://www.walltouch.online
-WOOCOMMERCE_CONSUMER_KEY=your_woocommerce_consumer_key
-WOOCOMMERCE_CONSUMER_SECRET=your_woocommerce_consumer_secret
+# Add these to Render:
+NEXTJS_SITE_URL=https://www.walltouch.online
+WEBHOOK_SECRET=your_webhook_secret_key
+ALLOWED_ORIGINS=https://www.walltouch.online,https://walltouch.online
 ```
 
 #### Social Media (Optional - Add Later):

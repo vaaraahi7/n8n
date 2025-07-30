@@ -10,9 +10,11 @@ RUN mkdir -p /home/node/.n8n/workflows /home/node/.n8n/credentials /opt/render/p
 # Install curl for health checks
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Copy workflows and configurations
+# Copy workflows and configurations (only if they exist)
 COPY workflows/ /home/node/.n8n/workflows/
-COPY credentials/ /home/node/.n8n/credentials/
+
+# Create credentials directory (will be populated via n8n interface)
+RUN mkdir -p /home/node/.n8n/credentials
 
 # Set permissions for Render
 RUN chown -R node:node /home/node/.n8n /opt/render/project/src/data
