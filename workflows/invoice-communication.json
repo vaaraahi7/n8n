@@ -1,0 +1,232 @@
+{
+  "name": "Invoice & Communication Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "order-status-update",
+        "options": {}
+      },
+      "name": "Order Status Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "order-status-webhook"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Invoice Generator\nconst order = $json;\n\n// Generate invoice number\nconst invoiceNumber = `INV-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;\n\n// Calculate totals\nlet subtotal = 0;\nlet taxAmount = 0;\nconst taxRate = 0.08; // 8% tax rate\n\nconst invoiceItems = [];\nif (order.items) {\n  order.items.forEach(item => {\n    const itemTotal = (item.price || 0) * (item.quantity || 1);\n    subtotal += itemTotal;\n    \n    invoiceItems.push({\n      name: item.name || item.product_name,\n      description: item.description || '',\n      quantity: item.quantity || 1,\n      unit_price: item.price || 0,\n      total: itemTotal\n    });\n  });\n}\n\ntaxAmount = subtotal * taxRate;\nconst shippingCost = order.shipping_cost || 0;\nconst total = subtotal + taxAmount + shippingCost;\n\n// Generate invoice data\nconst invoice = {\n  invoice_number: invoiceNumber,\n  order_id: order.order_id || order.id,\n  customer: {\n    name: order.customer_name || order.customer?.name || 'Customer',\n    email: order.customer_email || order.customer?.email || order.email,\n    address: order.billing_address || order.address || {}\n  },\n  items: invoiceItems,\n  subtotal: subtotal.toFixed(2),\n  tax_rate: (taxRate * 100).toFixed(0),\n  tax_amount: taxAmount.toFixed(2),\n  shipping_cost: shippingCost.toFixed(2),\n  total: total.toFixed(2),\n  currency: order.currency || 'USD',\n  issue_date: new Date().toISOString().split('T')[0],\n  due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now\n  status: order.status || 'pending',\n  payment_method: order.payment_method || 'Credit Card',\n  notes: order.notes || 'Thank you for your business!'\n};\n\nreturn [{ json: invoice }];"
+      },
+      "name": "Generate Invoice",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// HTML Invoice Template Generator\nconst invoice = $json;\n\nconst htmlTemplate = `\n<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\">\n    <title>Invoice ${invoice.invoice_number}</title>\n    <style>\n        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333; }\n        .header { text-align: center; margin-bottom: 30px; }\n        .company-name { font-size: 24px; font-weight: bold; color: #2c3e50; }\n        .invoice-title { font-size: 20px; margin: 10px 0; }\n        .invoice-details { display: flex; justify-content: space-between; margin: 20px 0; }\n        .customer-info, .invoice-info { width: 45%; }\n        .section-title { font-weight: bold; margin-bottom: 10px; color: #34495e; }\n        .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }\n        .items-table th, .items-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }\n        .items-table th { background-color: #f8f9fa; font-weight: bold; }\n        .totals { margin-top: 20px; text-align: right; }\n        .total-row { margin: 5px 0; }\n        .final-total { font-size: 18px; font-weight: bold; color: #27ae60; }\n        .footer { margin-top: 40px; text-align: center; color: #7f8c8d; }\n    </style>\n</head>\n<body>\n    <div class=\"header\">\n        <div class=\"company-name\">Your Store</div>\n        <div class=\"invoice-title\">INVOICE</div>\n    </div>\n    \n    <div class=\"invoice-details\">\n        <div class=\"customer-info\">\n            <div class=\"section-title\">Bill To:</div>\n            <div>${invoice.customer.name}</div>\n            <div>${invoice.customer.email}</div>\n            ${invoice.customer.address.street ? `<div>${invoice.customer.address.street}</div>` : ''}\n            ${invoice.customer.address.city ? `<div>${invoice.customer.address.city}, ${invoice.customer.address.state || ''} ${invoice.customer.address.zip || ''}</div>` : ''}\n        </div>\n        \n        <div class=\"invoice-info\">\n            <div class=\"section-title\">Invoice Details:</div>\n            <div><strong>Invoice #:</strong> ${invoice.invoice_number}</div>\n            <div><strong>Order #:</strong> ${invoice.order_id}</div>\n            <div><strong>Issue Date:</strong> ${invoice.issue_date}</div>\n            <div><strong>Due Date:</strong> ${invoice.due_date}</div>\n            <div><strong>Status:</strong> ${invoice.status.toUpperCase()}</div>\n        </div>\n    </div>\n    \n    <table class=\"items-table\">\n        <thead>\n            <tr>\n                <th>Item</th>\n                <th>Description</th>\n                <th>Qty</th>\n                <th>Unit Price</th>\n                <th>Total</th>\n            </tr>\n        </thead>\n        <tbody>\n            ${invoice.items.map(item => `\n                <tr>\n                    <td>${item.name}</td>\n                    <td>${item.description}</td>\n                    <td>${item.quantity}</td>\n                    <td>$${item.unit_price.toFixed(2)}</td>\n                    <td>$${item.total.toFixed(2)}</td>\n                </tr>\n            `).join('')}\n        </tbody>\n    </table>\n    \n    <div class=\"totals\">\n        <div class=\"total-row\"><strong>Subtotal: $${invoice.subtotal}</strong></div>\n        <div class=\"total-row\">Tax (${invoice.tax_rate}%): $${invoice.tax_amount}</div>\n        <div class=\"total-row\">Shipping: $${invoice.shipping_cost}</div>\n        <div class=\"total-row final-total\">Total: $${invoice.total} ${invoice.currency}</div>\n    </div>\n    \n    <div class=\"footer\">\n        <p><strong>Payment Method:</strong> ${invoice.payment_method}</p>\n        <p>${invoice.notes}</p>\n        <p>Thank you for your business!</p>\n    </div>\n</body>\n</html>\n`;\n\nreturn [{ json: { ...invoice, html_content: htmlTemplate } }];"
+      },
+      "name": "Create Invoice HTML",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "value2": "confirmed"
+            }
+          ]
+        }
+      },
+      "name": "Order Confirmed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "={{ $json.customer.email }}",
+        "subject": "✅ Order Confirmed - Invoice #{{ $json.invoice_number }}",
+        "message": "=Hi {{ $json.customer.name }},\n\nGreat news! Your order has been confirmed and is being prepared for shipment.\n\n**Order Details:**\n• Order #: {{ $json.order_id }}\n• Invoice #: {{ $json.invoice_number }}\n• Total: ${{ $json.total }} {{ $json.currency }}\n• Payment Method: {{ $json.payment_method }}\n\n**What's Next:**\n1. ✅ Order confirmed (completed)\n2. 📦 Preparing for shipment (current)\n3. 🚚 Shipped (you'll receive tracking info)\n4. 📬 Delivered\n\n**Estimated Delivery:** 3-5 business days\n\nYour invoice is attached to this email for your records.\n\n**Questions?** Just reply to this email - we're here to help!\n\nThank you for choosing us!\n\nBest regards,\nCustomer Service Team\nYour Store\n\n---\nOrder placed: {{ $json.issue_date }}\nTracking updates will be sent to this email address.",
+        "options": {
+          "attachments": "={{ $json.invoice_number }}.html"
+        }
+      },
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "value2": "shipped"
+            }
+          ]
+        }
+      },
+      "name": "Order Shipped?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        900,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "={{ $json.customer.email }}",
+        "subject": "🚚 Your Order is On Its Way! - Order #{{ $json.order_id }}",
+        "message": "=Hi {{ $json.customer.name }},\n\nExciting news! Your order has been shipped and is on its way to you.\n\n**Shipping Details:**\n• Order #: {{ $json.order_id }}\n• Tracking #: {{ $json.tracking_number || 'Will be provided shortly' }}\n• Carrier: {{ $json.shipping_carrier || 'Standard Shipping' }}\n• Estimated Delivery: {{ $json.estimated_delivery || '2-3 business days' }}\n\n**Track Your Package:**\n{{ $json.tracking_url ? '[Track Your Order](' + $json.tracking_url + ')' : 'Tracking information will be available within 24 hours.' }}\n\n**Order Summary:**\n{{ $json.items.map(item => `• ${item.name} (Qty: ${item.quantity})`).join('\\n') }}\n\n**Delivery Address:**\n{{ $json.customer.address.street || 'Address on file' }}\n{{ $json.customer.address.city ? $json.customer.address.city + ', ' + ($json.customer.address.state || '') + ' ' + ($json.customer.address.zip || '') : '' }}\n\n**What to Expect:**\n• You'll receive delivery notifications\n• No signature required (unless specified)\n• Package will be left in a safe location\n\n**Questions or Issues?**\nReply to this email or contact us at support@yourstore.com\n\nThank you for your business!\n\nBest regards,\nShipping Team\nYour Store",
+        "options": {}
+      },
+      "name": "Send Shipping Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "value2": "delivered"
+            }
+          ]
+        }
+      },
+      "name": "Order Delivered?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        900,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "={{ $json.customer.email }}",
+        "subject": "📦 Delivered! How was your experience? - Order #{{ $json.order_id }}",
+        "message": "=Hi {{ $json.customer.name }},\n\nGreat news! Your order has been delivered successfully.\n\n**Delivery Confirmation:**\n• Order #: {{ $json.order_id }}\n• Delivered: {{ new Date().toLocaleDateString() }}\n• Items: {{ $json.items.length }} item(s)\n\n**We'd Love Your Feedback!**\nYour experience matters to us. Could you take 2 minutes to share your thoughts?\n\n⭐ [Leave a Review](https://yourstore.com/reviews/{{ $json.order_id }})\n\n**Rate Your Experience:**\n• Product Quality: [Rate Here](https://yourstore.com/rate/quality/{{ $json.order_id }})\n• Shipping Speed: [Rate Here](https://yourstore.com/rate/shipping/{{ $json.order_id }})\n• Customer Service: [Rate Here](https://yourstore.com/rate/service/{{ $json.order_id }})\n\n**Need Support?**\n• Return/Exchange: [Start Here](https://yourstore.com/returns/{{ $json.order_id }})\n• Product Questions: Reply to this email\n• Technical Support: support@yourstore.com\n\n**Special Offer for You! 🎁**\nAs a thank you, here's 15% off your next order:\n**Code**: THANKYOU15\n**Valid**: Next 30 days\n\n[Shop Again](https://yourstore.com?utm_source=email&utm_campaign=post_delivery&discount=THANKYOU15)\n\n**Stay Connected:**\n• Follow us on [Instagram](https://instagram.com/yourstore)\n• Join our [Newsletter](https://yourstore.com/newsletter) for exclusive deals\n• Check out our [Blog](https://yourstore.com/blog) for tips and updates\n\nThank you for choosing us! We appreciate your business and look forward to serving you again.\n\nBest regards,\nCustomer Success Team\nYour Store\n\nP.S. Don't forget to unbox and enjoy your new purchase! 📸 Tag us @yourstore if you share on social media.",
+        "options": {}
+      },
+      "name": "Send Delivery Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Order Status Webhook": {
+      "main": [
+        [
+          {
+            "node": "Generate Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Invoice": {
+      "main": [
+        [
+          {
+            "node": "Create Invoice HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Invoice HTML": {
+      "main": [
+        [
+          {
+            "node": "Order Confirmed?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Order Shipped?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Order Delivered?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order Confirmed?": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order Shipped?": {
+      "main": [
+        [
+          {
+            "node": "Send Shipping Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order Delivered?": {
+      "main": [
+        [
+          {
+            "node": "Send Delivery Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "id": "invoice-communication"
+}

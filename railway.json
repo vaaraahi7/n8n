@@ -1,0 +1,54 @@
+{
+  "name": "n8n-walltouch-automation",
+  "description": "n8n automation platform for walltouch.online ecommerce",
+  "build": {
+    "builder": "DOCKERFILE"
+  },
+  "deploy": {
+    "startCommand": "n8n start",
+    "healthcheckPath": "/healthz",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3
+  },
+  "environments": {
+    "production": {
+      "variables": {
+        "NODE_ENV": "production",
+        "N8N_BASIC_AUTH_ACTIVE": "true",
+        "N8N_HOST": "n8n.walltouch.online",
+        "N8N_PORT": "5678",
+        "N8N_PROTOCOL": "https",
+        "WEBHOOK_URL": "https://n8n.walltouch.online/",
+        "DB_TYPE": "sqlite",
+        "DB_SQLITE_DATABASE": "/app/data/database.sqlite",
+        "EXECUTIONS_PROCESS": "main",
+        "EXECUTIONS_MODE": "regular",
+        "N8N_SECURE_COOKIE": "true",
+        "N8N_JWT_AUTH_ACTIVE": "true",
+        "N8N_METRICS": "false",
+        "GENERIC_TIMEZONE": "UTC"
+      }
+    }
+  },
+  "regions": ["us-west1"],
+  "services": [
+    {
+      "name": "n8n",
+      "source": {
+        "type": "image",
+        "image": "n8nio/n8n:latest"
+      },
+      "variables": {
+        "N8N_BASIC_AUTH_ACTIVE": "$N8N_BASIC_AUTH_ACTIVE",
+        "N8N_BASIC_AUTH_USER": "$N8N_BASIC_AUTH_USER",
+        "N8N_BASIC_AUTH_PASSWORD": "$N8N_BASIC_AUTH_PASSWORD",
+        "N8N_HOST": "$N8N_HOST",
+        "WEBHOOK_URL": "$WEBHOOK_URL",
+        "N8N_PORT": "$N8N_PORT",
+        "N8N_PROTOCOL": "$N8N_PROTOCOL",
+        "DB_TYPE": "$DB_TYPE",
+        "DB_SQLITE_DATABASE": "$DB_SQLITE_DATABASE"
+      }
+    }
+  ]
+}

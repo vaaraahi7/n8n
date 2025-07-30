@@ -1,0 +1,230 @@
+{
+  "name": "SEO Automation Suite",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "value": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Daily SEO Check",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "searchAnalytics",
+        "operation": "query",
+        "siteUrl": "https://yourstore.com",
+        "dimensions": [
+          "query",
+          "page"
+        ],
+        "startDate": "={{ $now.minus({days: 7}).toFormat('yyyy-MM-dd') }}",
+        "endDate": "={{ $now.toFormat('yyyy-MM-dd') }}",
+        "rowLimit": 100
+      },
+      "name": "Google Search Console",
+      "type": "n8n-nodes-base.googleSearchConsole",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://yourstore.com/sitemap.xml",
+        "options": {}
+      },
+      "name": "Check Sitemap",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.statusCode }}",
+              "operation": "notEqual",
+              "value2": "200"
+            }
+          ]
+        }
+      },
+      "name": "Sitemap Error?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "admin@yourstore.com",
+        "subject": "🚨 SEO Alert: Sitemap Issue Detected",
+        "message": "=Sitemap check failed with status: {{ $json.statusCode }}\n\nURL: https://yourstore.com/sitemap.xml\nTime: {{ $now.toISO() }}\n\nPlease check your sitemap immediately.",
+        "options": {}
+      },
+      "name": "Send Sitemap Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// SEO Performance Analysis\nconst items = $input.all();\nconst analysis = {\n  totalClicks: 0,\n  totalImpressions: 0,\n  avgPosition: 0,\n  topQueries: [],\n  topPages: [],\n  issues: []\n};\n\n// Process Search Console data\nif (items[0] && items[0].json) {\n  const data = items[0].json;\n  \n  if (data.rows) {\n    data.rows.forEach(row => {\n      analysis.totalClicks += row.clicks || 0;\n      analysis.totalImpressions += row.impressions || 0;\n      \n      if (row.keys && row.keys[0]) {\n        analysis.topQueries.push({\n          query: row.keys[0],\n          clicks: row.clicks,\n          impressions: row.impressions,\n          ctr: row.ctr,\n          position: row.position\n        });\n      }\n    });\n    \n    // Calculate average position\n    analysis.avgPosition = data.rows.reduce((sum, row) => sum + (row.position || 0), 0) / data.rows.length;\n    \n    // Sort top queries by clicks\n    analysis.topQueries.sort((a, b) => b.clicks - a.clicks);\n    analysis.topQueries = analysis.topQueries.slice(0, 10);\n    \n    // Identify issues\n    if (analysis.avgPosition > 10) {\n      analysis.issues.push('Average position is below 10');\n    }\n    \n    if (analysis.totalClicks < 100) {\n      analysis.issues.push('Low click volume (< 100 clicks/week)');\n    }\n    \n    const avgCTR = analysis.totalClicks / analysis.totalImpressions;\n    if (avgCTR < 0.02) {\n      analysis.issues.push('Low CTR (< 2%)');\n    }\n  }\n}\n\nreturn [{ json: analysis }];"
+      },
+      "name": "Analyze SEO Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        680,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "admin@yourstore.com",
+        "subject": "📊 Weekly SEO Report - {{ $now.toFormat('yyyy-MM-dd') }}",
+        "message": "=# Weekly SEO Performance Report\n\n## 📈 Key Metrics\n- **Total Clicks**: {{ $json.totalClicks }}\n- **Total Impressions**: {{ $json.totalImpressions }}\n- **Average Position**: {{ $json.avgPosition.toFixed(2) }}\n- **CTR**: {{ ($json.totalClicks / $json.totalImpressions * 100).toFixed(2) }}%\n\n## 🔍 Top Performing Queries\n{{ $json.topQueries.slice(0, 5).map(q => `- **${q.query}**: ${q.clicks} clicks, Position ${q.position.toFixed(1)}`).join('\\n') }}\n\n## ⚠️ Issues Detected\n{{ $json.issues.length > 0 ? $json.issues.map(issue => `- ${issue}`).join('\\n') : 'No issues detected ✅' }}\n\n## 📋 Recommendations\n{{ $json.issues.length > 0 ? '- Review and optimize underperforming pages\\n- Improve meta descriptions for better CTR\\n- Focus on long-tail keyword optimization' : '- Continue current SEO strategy\\n- Monitor competitor movements\\n- Expand content for top-performing queries' }}\n\n---\nGenerated automatically by n8n SEO Automation",
+        "options": {}
+      },
+      "name": "Send SEO Report",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        900,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.serpapi.com/search",
+        "qs": {
+          "engine": "google",
+          "q": "{{ $json.query }}",
+          "api_key": "{{ $env.SERPAPI_KEY }}",
+          "num": "10"
+        },
+        "options": {}
+      },
+      "name": "Check Rankings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        460,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Competitor Analysis\nconst items = $input.all();\nconst competitors = [];\nconst targetDomain = 'yourstore.com';\n\nif (items[0] && items[0].json && items[0].json.organic_results) {\n  const results = items[0].json.organic_results;\n  \n  results.forEach((result, index) => {\n    const domain = new URL(result.link).hostname;\n    \n    if (domain !== targetDomain) {\n      competitors.push({\n        domain: domain,\n        position: index + 1,\n        title: result.title,\n        snippet: result.snippet,\n        url: result.link\n      });\n    } else {\n      // Found our site\n      competitors.push({\n        domain: targetDomain,\n        position: index + 1,\n        title: result.title,\n        snippet: result.snippet,\n        url: result.link,\n        isOurSite: true\n      });\n    }\n  });\n}\n\nreturn [{ json: { competitors, query: $input.first().json.query } }];"
+      },
+      "name": "Analyze Competition",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        680,
+        700
+      ]
+    }
+  ],
+  "connections": {
+    "Daily SEO Check": {
+      "main": [
+        [
+          {
+            "node": "Google Search Console",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Sitemap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Search Console": {
+      "main": [
+        [
+          {
+            "node": "Analyze SEO Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Sitemap": {
+      "main": [
+        [
+          {
+            "node": "Sitemap Error?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sitemap Error?": {
+      "main": [
+        [
+          {
+            "node": "Send Sitemap Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze SEO Data": {
+      "main": [
+        [
+          {
+            "node": "Send SEO Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Rankings": {
+      "main": [
+        [
+          {
+            "node": "Analyze Competition",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "id": "seo-automation"
+}

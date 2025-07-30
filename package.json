@@ -1,0 +1,45 @@
+{
+  "name": "n8n-ecommerce-automation",
+  "version": "1.0.0",
+  "description": "n8n automation platform for ecommerce with blog automation",
+  "main": "api/n8n.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Build completed'",
+    "start": "node api/n8n.js",
+    "local": "docker-compose up -d",
+    "local-stop": "docker-compose down",
+    "test": "node test/webhook-test.js",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "n8n": "^1.0.0",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "compression": "^1.7.4",
+    "sqlite3": "^5.1.6",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@vercel/node": "^3.0.0",
+    "vercel": "^32.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "n8n",
+    "automation",
+    "ecommerce",
+    "blog",
+    "workflow",
+    "vercel"
+  ],
+  "author": "Your Store",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/n8n-ecommerce-automation"
+  }
+}

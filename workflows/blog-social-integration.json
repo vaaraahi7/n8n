@@ -1,0 +1,261 @@
+{
+  "name": "Blog Social Media Integration",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "blog-published",
+        "options": {}
+      },
+      "name": "Blog Published Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "blog-published"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Blog Social Media Content Generator\nconst blogPost = $json;\n\n// Generate platform-specific content\nconst socialContent = {\n  facebook: {\n    text: `🏠 New Blog Post: ${blogPost.title}\\n\\n${blogPost.meta_description}\\n\\nPerfect for anyone looking to transform their ${blogPost.category} space! ✨\\n\\nRead the full guide: ${blogPost.url || 'https://yourblog.com/posts/' + blogPost.slug}\\n\\n#InteriorDesign #${blogPost.category.charAt(0).toUpperCase() + blogPost.category.slice(1)} #HomeDecor #DesignTips`,\n    image_url: blogPost.featured_image || null,\n    link: blogPost.url || 'https://yourblog.com/posts/' + blogPost.slug\n  },\n  \n  instagram: {\n    text: `✨ NEW BLOG POST ✨\\n\\n${blogPost.title}\\n\\n${blogPost.category === 'wallpapers' ? '🎨 Transform your walls with stunning wallpaper ideas' : blogPost.category === 'furniture' ? '🛋️ Discover furniture pieces that make a statement' : '🏡 Get inspired with fresh home decor ideas'}\\n\\nSwipe for preview 👉\\nLink in bio for full article\\n\\n${blogPost.keywords.map(k => '#' + k.replace(/\\s+/g, '')).join(' ')} #InteriorDesign #HomeDecor`,\n    image_url: blogPost.featured_image || null,\n    carousel_images: blogPost.gallery_images || []\n  },\n  \n  pinterest: {\n    text: `${blogPost.title} | ${blogPost.meta_description}`,\n    board_name: blogPost.category === 'wallpapers' ? 'Wallpaper Ideas' : blogPost.category === 'furniture' ? 'Furniture Inspiration' : 'Home Decor',\n    image_url: blogPost.featured_image || null,\n    link: blogPost.url || 'https://yourblog.com/posts/' + blogPost.slug\n  },\n  \n  twitter: {\n    text: `📖 New guide: ${blogPost.title}\\n\\n${blogPost.meta_description.substring(0, 100)}...\\n\\n${blogPost.url || 'https://yourblog.com/posts/' + blogPost.slug}\\n\\n${blogPost.keywords.slice(0, 3).map(k => '#' + k.replace(/\\s+/g, '')).join(' ')}`,\n    image_url: blogPost.featured_image || null\n  },\n  \n  linkedin: {\n    text: `Professional insight: ${blogPost.title}\\n\\n${blogPost.meta_description}\\n\\nAs interior design professionals, we understand the importance of staying current with trends and techniques. This comprehensive guide covers everything you need to know about ${blogPost.category}.\\n\\nRead more: ${blogPost.url || 'https://yourblog.com/posts/' + blogPost.slug}\\n\\n#InteriorDesign #ProfessionalDesign #${blogPost.category}`,\n    image_url: blogPost.featured_image || null\n  }\n};\n\n// Add blog metadata\nconst enrichedContent = {\n  ...blogPost,\n  social_content: socialContent,\n  publish_time: new Date().toISOString(),\n  platforms_to_post: ['facebook', 'instagram', 'pinterest'],\n  scheduled_posts: {\n    immediate: ['facebook'],\n    delayed_1h: ['instagram'],\n    delayed_2h: ['pinterest'],\n    delayed_4h: ['twitter', 'linkedin']\n  }\n};\n\nreturn [{ json: enrichedContent }];"
+      },
+      "name": "Generate Social Content",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "pageId": "{{ $env.FACEBOOK_PAGE_ID }}",
+        "postType": "link",
+        "content": "={{ $json.social_content.facebook.text }}",
+        "link": "={{ $json.social_content.facebook.link }}"
+      },
+      "name": "Post to Facebook",
+      "type": "n8n-nodes-base.facebookPages",
+      "typeVersion": 1,
+      "position": [
+        680,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://graph.facebook.com/v18.0/{{ $env.INSTAGRAM_ACCOUNT_ID }}/media",
+        "httpMethod": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "caption",
+              "value": "={{ $json.social_content.instagram.text }}"
+            },
+            {
+              "name": "image_url",
+              "value": "={{ $json.social_content.instagram.image_url }}"
+            },
+            {
+              "name": "access_token",
+              "value": "{{ $env.INSTAGRAM_ACCESS_TOKEN }}"
+            }
+          ]
+        }
+      },
+      "name": "Post to Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        680,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.pinterest.com/v5/pins",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "httpMethod": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.PINTEREST_ACCESS_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "board_id",
+              "value": "{{ $env.PINTEREST_BOARD_ID }}"
+            },
+            {
+              "name": "media_source",
+              "value": "={{ { image_url: $json.social_content.pinterest.image_url } }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ $json.social_content.pinterest.text }}"
+            },
+            {
+              "name": "link",
+              "value": "={{ $json.social_content.pinterest.link }}"
+            }
+          ]
+        }
+      },
+      "name": "Post to Pinterest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        680,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "value": 1
+            }
+          ]
+        }
+      },
+      "name": "Delayed Social Posts",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Check for scheduled social media posts\nconst now = new Date();\nconst oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);\nconst twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);\nconst fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000);\n\n// Mock data - in real implementation, this would check a database\n// for scheduled posts that need to be published\nconst scheduledPosts = [\n  {\n    platform: 'twitter',\n    scheduled_time: fourHoursAgo.toISOString(),\n    content: 'Sample Twitter post about latest blog',\n    status: 'pending'\n  },\n  {\n    platform: 'linkedin',\n    scheduled_time: fourHoursAgo.toISOString(),\n    content: 'Sample LinkedIn post about latest blog',\n    status: 'pending'\n  }\n];\n\n// Filter posts that are ready to be published\nconst readyToPosts = scheduledPosts.filter(post => {\n  const postTime = new Date(post.scheduled_time);\n  return postTime <= now && post.status === 'pending';\n});\n\nreturn readyToPosts.map(post => ({ json: post }));"
+      },
+      "name": "Check Scheduled Posts",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "marketing@yourstore.com",
+        "subject": "📱 Blog Social Media Distribution Complete",
+        "message": "=**Blog Post Social Media Distribution**\\n\\n**Blog Post**: {{ $json.title }}\\n**Published**: {{ $json.publish_time }}\\n\\n**Social Media Status**:\\n✅ Facebook - Posted immediately\\n✅ Instagram - Posted (1 hour delay)\\n✅ Pinterest - Posted (2 hours delay)\\n⏳ Twitter - Scheduled (4 hours delay)\\n⏳ LinkedIn - Scheduled (4 hours delay)\\n\\n**Performance Tracking**:\\n- Monitor engagement over next 24 hours\\n- Track click-through rates to blog\\n- Review social media analytics weekly\\n\\n**Blog URL**: {{ $json.url || 'https://yourblog.com/posts/' + $json.slug }}\\n\\n**Next Steps**:\\n- Share in relevant Facebook groups\\n- Engage with comments and shares\\n- Consider boosting high-performing posts\\n\\n---\\nAutomated by n8n Blog Social Integration",
+        "options": {}
+      },
+      "name": "Send Distribution Report",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        900,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "social-schedule",
+        "options": {}
+      },
+      "name": "Manual Social Schedule",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        600
+      ],
+      "webhookId": "manual-social-schedule"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Manual Social Media Scheduling\nconst request = $json;\n\n// Validate request\nif (!request.content || !request.platforms) {\n  throw new Error('Content and platforms are required');\n}\n\n// Process manual scheduling request\nconst scheduledPost = {\n  content: request.content,\n  platforms: request.platforms, // array of platform names\n  scheduled_time: request.scheduled_time || new Date().toISOString(),\n  image_url: request.image_url || null,\n  link: request.link || null,\n  hashtags: request.hashtags || [],\n  priority: request.priority || 'normal',\n  campaign: request.campaign || 'manual',\n  created_by: request.created_by || 'system',\n  status: 'scheduled'\n};\n\n// Generate platform-specific content\nconst platformContent = {};\nrequest.platforms.forEach(platform => {\n  switch(platform) {\n    case 'facebook':\n      platformContent.facebook = {\n        text: request.content + (request.link ? `\\n\\n${request.link}` : ''),\n        image_url: request.image_url\n      };\n      break;\n    case 'instagram':\n      platformContent.instagram = {\n        text: request.content + (request.hashtags.length ? `\\n\\n${request.hashtags.join(' ')}` : ''),\n        image_url: request.image_url\n      };\n      break;\n    case 'twitter':\n      platformContent.twitter = {\n        text: request.content.substring(0, 240) + (request.link ? ` ${request.link}` : ''),\n        image_url: request.image_url\n      };\n      break;\n    case 'pinterest':\n      platformContent.pinterest = {\n        text: request.content,\n        image_url: request.image_url,\n        link: request.link\n      };\n      break;\n  }\n});\n\nreturn [{ json: { ...scheduledPost, platform_content: platformContent } }];"
+      },
+      "name": "Process Manual Schedule",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        460,
+        600
+      ]
+    }
+  ],
+  "connections": {
+    "Blog Published Webhook": {
+      "main": [
+        [
+          {
+            "node": "Generate Social Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Social Content": {
+      "main": [
+        [
+          {
+            "node": "Post to Facebook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Post to Instagram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Post to Pinterest",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Distribution Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delayed Social Posts": {
+      "main": [
+        [
+          {
+            "node": "Check Scheduled Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Social Schedule": {
+      "main": [
+        [
+          {
+            "node": "Process Manual Schedule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "id": "blog-social-integration"
+}

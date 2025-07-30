@@ -1,0 +1,136 @@
+{
+  "name": "Social Media Automation Suite",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "value": "0 9,15,18 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Daily Posting Schedule",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "blog-published",
+        "options": {}
+      },
+      "name": "Blog Published Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        800
+      ],
+      "webhookId": "blog-published"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Content Generator for Social Media\nconst contentTypes = [\n  {\n    type: 'product_highlight',\n    templates: [\n      {\n        text: \"🌟 Product Spotlight: {product_name}\\n\\n{product_description}\\n\\n✨ Why customers love it:\\n• {benefit_1}\\n• {benefit_2}\\n• {benefit_3}\\n\\n🛒 Shop now: {product_url}\\n\\n#ecommerce #quality #shopping #deals\",\n        image_required: true\n      }\n    ]\n  },\n  {\n    type: 'tips_and_advice',\n    templates: [\n      {\n        text: \"💡 Pro Tip Tuesday!\\n\\n{tip_title}\\n\\n{tip_description}\\n\\nTry this and let us know how it works for you! 👇\\n\\n#tips #advice #ecommerce #business #growth\",\n        image_required: false\n      }\n    ]\n  },\n  {\n    type: 'behind_the_scenes',\n    templates: [\n      {\n        text: \"🎬 Behind the Scenes\\n\\n{bts_description}\\n\\nWe love sharing our journey with you! What would you like to see more of?\\n\\n#behindthescenes #team #company #transparency\",\n        image_required: true\n      }\n    ]\n  },\n  {\n    type: 'customer_testimonial',\n    templates: [\n      {\n        text: \"⭐ Customer Love Alert! ⭐\\n\\n\\\"{testimonial_text}\\\"\\n\\n- {customer_name}\\n\\nThank you for trusting us! 🙏\\n\\n#testimonial #customerreview #happy #grateful #quality\",\n        image_required: false\n      }\n    ]\n  },\n  {\n    type: 'promotional',\n    templates: [\n      {\n        text: \"🔥 LIMITED TIME OFFER! 🔥\\n\\n{offer_description}\\n\\n💰 Save {discount_amount}\\n⏰ Ends {end_date}\\n🎯 Code: {promo_code}\\n\\n[Shop Now]({shop_url})\\n\\n#sale #discount #limitedtime #deals #shopping\",\n        image_required: true\n      }\n    ]\n  }\n];\n\nconst tips = [\n  {\n    title: \"Optimize Your Product Photos\",\n    description: \"Use natural lighting and multiple angles to showcase your products. Good photos can increase conversion rates by up to 30%!\"\n  },\n  {\n    title: \"Write Compelling Product Descriptions\",\n    description: \"Focus on benefits, not just features. Tell a story about how your product solves problems or improves lives.\"\n  },\n  {\n    title: \"Leverage Social Proof\",\n    description: \"Display customer reviews, ratings, and testimonials prominently. 92% of consumers read reviews before making a purchase.\"\n  },\n  {\n    title: \"Optimize for Mobile\",\n    description: \"Over 60% of online shopping happens on mobile devices. Ensure your site loads fast and is easy to navigate on phones.\"\n  },\n  {\n    title: \"Use Abandoned Cart Recovery\",\n    description: \"Send follow-up emails to customers who left items in their cart. This can recover 10-15% of lost sales.\"\n  }\n];\n\nconst testimonials = [\n  {\n    text: \"Amazing quality and fast shipping! Will definitely order again.\",\n    customer: \"Sarah M.\"\n  },\n  {\n    text: \"Best customer service I've experienced. They went above and beyond!\",\n    customer: \"Mike R.\"\n  },\n  {\n    text: \"The product exceeded my expectations. Highly recommend!\",\n    customer: \"Jennifer L.\"\n  }\n];\n\n// Select content type based on time of day\nconst hour = new Date().getHours();\nlet selectedType;\n\nif (hour === 9) {\n  selectedType = contentTypes.find(c => c.type === 'tips_and_advice');\n} else if (hour === 15) {\n  selectedType = contentTypes.find(c => c.type === 'product_highlight');\n} else if (hour === 18) {\n  selectedType = contentTypes.find(c => c.type === 'customer_testimonial');\n}\n\nlet content = {};\n\nif (selectedType.type === 'tips_and_advice') {\n  const tip = tips[Math.floor(Math.random() * tips.length)];\n  content = {\n    type: 'tips_and_advice',\n    text: selectedType.templates[0].text\n      .replace('{tip_title}', tip.title)\n      .replace('{tip_description}', tip.description),\n    image_required: false,\n    platforms: ['facebook', 'instagram', 'linkedin']\n  };\n} else if (selectedType.type === 'customer_testimonial') {\n  const testimonial = testimonials[Math.floor(Math.random() * testimonials.length)];\n  content = {\n    type: 'customer_testimonial',\n    text: selectedType.templates[0].text\n      .replace('{testimonial_text}', testimonial.text)\n      .replace('{customer_name}', testimonial.customer),\n    image_required: false,\n    platforms: ['facebook', 'instagram', 'twitter']\n  };\n} else {\n  // Product highlight\n  content = {\n    type: 'product_highlight',\n    text: \"🌟 Check out our amazing products!\\n\\nQuality you can trust, prices you'll love.\\n\\n🛒 Shop now: https://yourstore.com\\n\\n#ecommerce #quality #shopping #deals\",\n    image_required: true,\n    platforms: ['facebook', 'instagram']\n  };\n}\n\nreturn [{ json: content }];"
+      },
+      "name": "Generate Content",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.platforms }}",
+              "operation": "contains",\n              \"value2\": \"facebook\"\n            }\n          ]\n        }\n      },\n      \"name\": \"Post to Facebook?\",\n      \"type\": \"n8n-nodes-base.if\",\n      \"typeVersion\": 1,\n      \"position\": [\n        680,\n        200\n      ]\n    },\n    {\n      \"parameters\": {\n        \"authentication\": \"oAuth2\",\n        \"pageId\": \"{{ $env.FACEBOOK_PAGE_ID }}\",\n        \"postType\": \"text\",\n        \"content\": \"={{ $json.text }}\"\n      },\n      \"name\": \"Facebook Post\",\n      \"type\": \"n8n-nodes-base.facebookPages\",\n      \"typeVersion\": 1,\n      \"position\": [\n        900,\n        200\n      ]\n    },\n    {\n      \"parameters\": {\n        \"conditions\": {\n          \"string\": [\n            {\n              \"value1\": \"={{ $json.platforms }}\",\n              \"operation\": \"contains\",\n              \"value2\": \"instagram\"\n            }\n          ]\n        }\n      },\n      \"name\": \"Post to Instagram?\",\n      \"type\": \"n8n-nodes-base.if\",\n      \"typeVersion\": 1,\n      \"position\": [\n        680,\n        400\n      ]\n    },\n    {\n      \"parameters\": {\n        \"url\": \"https://graph.facebook.com/v18.0/{{ $env.INSTAGRAM_ACCOUNT_ID }}/media\",\n        \"authentication\": \"genericCredentialType\",\n        \"genericAuthType\": \"httpHeaderAuth\",\n        \"httpMethod\": \"POST\",\n        \"sendBody\": true,\n        \"bodyParameters\": {\n          \"parameters\": [\n            {\n              \"name\": \"caption\",\n              \"value\": \"={{ $json.text }}\"\n            },\n            {\n              \"name\": \"access_token\",\n              \"value\": \"{{ $env.INSTAGRAM_ACCESS_TOKEN }}\"\n            }\n          ]\n        }\n      },\n      \"name\": \"Instagram Post\",\n      \"type\": \"n8n-nodes-base.httpRequest\",\n      \"typeVersion\": 1,\n      \"position\": [\n        900,\n        400\n      ]\n    },\n    {\n      \"parameters\": {\n        \"httpMethod\": \"POST\",\n        \"path\": \"social-engagement\",\n        \"options\": {}\n      },\n      \"name\": \"Social Engagement Webhook\",\n      \"type\": \"n8n-nodes-base.webhook\",\n      \"typeVersion\": 1,\n      \"position\": [\n        240,\n        600\n      ],\n      \"webhookId\": \"social-engagement\"\n    },\n    {\n      \"parameters\": {\n        \"functionCode\": \"// Social Media Engagement Handler\\nconst engagement = $json;\\nlet response = '';\\n\\n// Auto-response templates\\nconst responses = {\\n  comment: {\\n    positive: [\\n      'Thank you so much! 😊 We really appreciate your support!',\\n      'You made our day! 🌟 Thank you for the kind words!',\\n      'We\\'re so happy you love it! 💕 Thank you!',\\n      'Your support means everything to us! 🙏 Thank you!'\\n    ],\\n    question: [\\n      'Great question! We\\'ll send you a DM with more details 📩',\\n      'Thanks for asking! Check your DMs for more info 💬',\\n      'We\\'d love to help! Sending you a message now 📨'\\n    ],\\n    general: [\\n      'Thanks for engaging with us! 😊',\\n      'We appreciate your comment! 💙',\\n      'Thank you for being part of our community! 🌟'\\n    ]\\n  },\\n  mention: {\\n    positive: [\\n      'Thank you for the mention! 🙌 We\\'re grateful for customers like you!',\\n      'You\\'re amazing! 💫 Thanks for spreading the word!',\\n      'We\\'re honored by your mention! 🌟 Thank you!'\\n    ],\\n    general: [\\n      'Thanks for the mention! 😊',\\n      'We appreciate you thinking of us! 💙'\\n    ]\\n  }\\n};\\n\\n// Determine response type\\nlet responseType = 'general';\\nif (engagement.text) {\\n  const text = engagement.text.toLowerCase();\\n  if (text.includes('love') || text.includes('great') || text.includes('amazing') || text.includes('awesome')) {\\n    responseType = 'positive';\\n  } else if (text.includes('?') || text.includes('how') || text.includes('when') || text.includes('where')) {\\n    responseType = 'question';\\n  }\\n}\\n\\n// Select appropriate response\\nconst responseCategory = responses[engagement.type] || responses.comment;\\nconst responseArray = responseCategory[responseType] || responseCategory.general;\\nresponse = responseArray[Math.floor(Math.random() * responseArray.length)];\\n\\nreturn [{\\n  json: {\\n    ...engagement,\\n    auto_response: response,\\n    response_type: responseType,\\n    should_respond: true,\\n    processed_at: new Date().toISOString()\\n  }\\n}];\"\n      },\n      \"name\": \"Process Engagement\",\n      \"type\": \"n8n-nodes-base.function\",\n      \"typeVersion\": 1,\n      \"position\": [\n        460,\n        600\n      ]\n    },\n    {\n      \"parameters\": {\n        \"authentication\": \"oAuth2\",\n        \"sendTo\": \"social@yourstore.com\",\n        \"subject\": \"🔔 New Social Media Engagement\",\n        \"message\": \"=**New {{ $json.type }} on {{ $json.platform }}**\\n\\n**From**: {{ $json.user_name || 'Unknown User' }}\\n**Content**: {{ $json.text }}\\n**Link**: {{ $json.link }}\\n\\n**Suggested Response**: {{ $json.auto_response }}\\n\\n**Action Required**: {{ $json.response_type === 'question' ? 'Manual response recommended for question' : 'Auto-response suggested' }}\\n\\n---\\nProcessed at: {{ $json.processed_at }}\",\n        \"options\": {}\n      },\n      \"name\": \"Notify Team\",\n      \"type\": \"n8n-nodes-base.gmail\",\n      \"typeVersion\": 1,\n      \"position\": [\n        680,\n        600\n      ]\n    }\n  ],\n  \"connections\": {\n    \"Daily Posting Schedule\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Generate Content\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Generate Content\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Post to Facebook?\",\n            \"type\": \"main\",\n            \"index\": 0\n          },\n          {\n            \"node\": \"Post to Instagram?\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Post to Facebook?\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Facebook Post\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Post to Instagram?\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Instagram Post\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Social Engagement Webhook\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Process Engagement\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    },\n    \"Process Engagement\": {\n      \"main\": [\n        [\n          {\n            \"node\": \"Notify Team\",\n            \"type\": \"main\",\n            \"index\": 0\n          }\n        ]\n      ]\n    }\n  },\n  \"active\": true,\n  \"settings\": {},\n  \"id\": \"social-media-automation\"\n}"
+      ]
+    }
+  ],
+  "connections": {
+    "Daily Posting Schedule": {
+      "main": [
+        [
+          {
+            "node": "Generate Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Content": {
+      "main": [
+        [
+          {
+            "node": "Post to Facebook?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Post to Instagram?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Facebook?": {
+      "main": [
+        [
+          {
+            "node": "Facebook Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Instagram?": {
+      "main": [
+        [
+          {
+            "node": "Instagram Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Engagement Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process Engagement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Engagement": {
+      "main": [
+        [
+          {
+            "node": "Notify Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "id": "social-media-automation"
+}

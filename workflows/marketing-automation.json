@@ -1,0 +1,230 @@
+{
+  "name": "Marketing Automation Suite",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-lead",
+        "options": {}
+      },
+      "name": "New Lead Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "new-lead-webhook"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Lead Scoring Algorithm\nconst lead = $json;\nlet score = 0;\n\n// Email domain scoring\nif (lead.email) {\n  const domain = lead.email.split('@')[1];\n  const businessDomains = ['gmail.com', 'yahoo.com', 'hotmail.com'];\n  if (!businessDomains.includes(domain)) {\n    score += 20; // Business email\n  }\n}\n\n// Source scoring\nswitch (lead.source) {\n  case 'organic':\n    score += 30;\n    break;\n  case 'paid':\n    score += 25;\n    break;\n  case 'social':\n    score += 15;\n    break;\n  case 'referral':\n    score += 35;\n    break;\n  default:\n    score += 10;\n}\n\n// Behavior scoring\nif (lead.pages_visited > 5) score += 20;\nif (lead.time_on_site > 300) score += 15; // 5+ minutes\nif (lead.downloaded_resource) score += 25;\nif (lead.viewed_pricing) score += 30;\n\n// Company size (if provided)\nif (lead.company_size) {\n  if (lead.company_size === 'enterprise') score += 40;\n  else if (lead.company_size === 'medium') score += 25;\n  else if (lead.company_size === 'small') score += 15;\n}\n\n// Budget indication\nif (lead.budget) {\n  if (lead.budget === 'high') score += 35;\n  else if (lead.budget === 'medium') score += 20;\n  else if (lead.budget === 'low') score += 5;\n}\n\n// Determine lead quality\nlet quality = 'cold';\nif (score >= 80) quality = 'hot';\nelse if (score >= 50) quality = 'warm';\n\nreturn [{\n  json: {\n    ...lead,\n    score: score,\n    quality: quality,\n    scored_at: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Score Lead",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.quality }}",
+              "value2": "hot"
+            }
+          ]
+        }
+      },
+      "name": "Hot Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "={{ $json.email }}",
+        "subject": "🔥 Exclusive Offer Just for You!",
+        "message": "=Hi {{ $json.name || 'there' }},\n\nThank you for your interest in our products! Based on your activity, I wanted to personally reach out with an exclusive offer.\n\n🎯 **Special Discount**: 20% off your first order\n💰 **Code**: WELCOME20\n⏰ **Valid**: Next 48 hours only\n\n{{ $json.viewed_pricing ? 'I noticed you were looking at our pricing - this discount applies to any plan!' : 'This discount applies to any of our products!' }}\n\n**Why choose us?**\n✅ Industry-leading quality\n✅ 24/7 customer support\n✅ 30-day money-back guarantee\n\nReady to get started? [Shop Now](https://yourstore.com?utm_source=email&utm_campaign=hot_lead&discount=WELCOME20)\n\nQuestions? Just reply to this email - I'm here to help!\n\nBest regards,\nSales Team\nYour Store",
+        "options": {
+          "ccList": "sales@yourstore.com"
+        }
+      },
+      "name": "Send Hot Lead Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.quality }}",
+              "value2": "warm"
+            }
+          ]
+        }
+      },
+      "name": "Warm Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "={{ $json.email }}",
+        "subject": "Welcome! Here's what you need to know",
+        "message": "=Hi {{ $json.name || 'there' }},\n\nWelcome to our community! I'm excited you're interested in what we have to offer.\n\n📚 **Getting Started Guide**\nI've put together some resources that might help:\n\n🔍 [Product Comparison Guide](https://yourstore.com/compare)\n💡 [Customer Success Stories](https://yourstore.com/testimonials)\n📖 [Free Resource Library](https://yourstore.com/resources)\n\n**What makes us different?**\n{{ $json.source === 'organic' ? '🌟 You found us organically - that means our reputation speaks for itself!' : '🌟 Quality products with proven results' }}\n{{ $json.company_size ? `\\n🏢 Perfect for ${$json.company_size} businesses like yours` : '' }}\n\n**Next Steps:**\n1. Browse our [product catalog](https://yourstore.com/products)\n2. Check out our [pricing options](https://yourstore.com/pricing)\n3. Join our [community forum](https://yourstore.com/community)\n\nI'll follow up in a few days with more personalized recommendations based on your interests.\n\nBest regards,\nMarketing Team\nYour Store\n\nP.S. Keep an eye out for our weekly newsletter with tips and exclusive offers!",
+        "options": {}
+      },
+      "name": "Send Warm Lead Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        900,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "={{ $json.email }}",
+        "subject": "Thanks for your interest!",
+        "message": "=Hi {{ $json.name || 'there' }},\n\nThank you for visiting our website and showing interest in our products!\n\n📧 **Stay Connected**\nI've added you to our newsletter where you'll receive:\n- Weekly tips and insights\n- Product updates and new features\n- Exclusive subscriber-only offers\n- Industry news and trends\n\n🎁 **Welcome Gift**\nAs a thank you, here's a 10% discount for when you're ready:\n**Code**: WELCOME10\n\n📚 **Helpful Resources**\n- [Blog](https://yourstore.com/blog) - Industry insights and tips\n- [FAQ](https://yourstore.com/faq) - Common questions answered\n- [Contact Us](https://yourstore.com/contact) - We're here to help!\n\nNo pressure - take your time to explore. I'm here if you have any questions!\n\nBest regards,\nMarketing Team\nYour Store",
+        "options": {}
+      },
+      "name": "Send Cold Lead Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        900,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "value": "0 10 * * 1"
+            }
+          ]
+        }
+      },
+      "name": "Weekly Newsletter",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        240,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Newsletter Content Generator\nconst topics = [\n  {\n    title: \"5 Ecommerce Trends to Watch This Month\",\n    content: \"Discover the latest trends shaping online retail and how to leverage them for your business growth.\",\n    cta: \"Read Full Article\",\n    link: \"https://yourstore.com/blog/ecommerce-trends\"\n  },\n  {\n    title: \"Customer Success Story: 300% ROI Increase\",\n    content: \"Learn how one of our clients tripled their return on investment using our platform.\",\n    cta: \"View Case Study\",\n    link: \"https://yourstore.com/case-studies/roi-increase\"\n  },\n  {\n    title: \"New Feature: Advanced Analytics Dashboard\",\n    content: \"Get deeper insights into your business performance with our newly launched analytics tools.\",\n    cta: \"Explore Features\",\n    link: \"https://yourstore.com/features/analytics\"\n  }\n];\n\nconst selectedTopic = topics[Math.floor(Math.random() * topics.length)];\n\nconst newsletter = {\n  subject: `📈 Weekly Insights: ${selectedTopic.title}`,\n  content: `\n# This Week's Highlights\n\n## 🌟 Featured Article\n**${selectedTopic.title}**\n\n${selectedTopic.content}\n\n[${selectedTopic.cta}](${selectedTopic.link})\n\n## 📊 Quick Stats\n- 🛒 Average cart value increased 15% this month\n- 📱 Mobile traffic now represents 65% of all visits\n- ⭐ Customer satisfaction score: 4.8/5\n\n## 🎯 This Week's Tip\n**Optimize Your Product Descriptions**\nUse emotional triggers and specific benefits rather than just features. Instead of \"High-quality material,\" try \"Luxuriously soft fabric that feels amazing against your skin.\"\n\n## 🔥 Limited Time Offer\n**Flash Sale**: 25% off all premium plans\n**Code**: WEEKLY25\n**Valid**: Until Friday midnight\n\n[Claim Your Discount](https://yourstore.com/pricing?code=WEEKLY25)\n\n## 📅 Upcoming Events\n- **Webinar**: \"Scaling Your Ecommerce Business\" - Thursday 2 PM EST\n- **Product Demo**: \"New Analytics Features\" - Friday 11 AM EST\n\n[Register for Events](https://yourstore.com/events)\n\n---\n\n**Follow Us:**\n[Facebook](https://facebook.com/yourstore) | [Instagram](https://instagram.com/yourstore) | [YouTube](https://youtube.com/yourstore)\n\nYou're receiving this because you subscribed to our newsletter.\n[Unsubscribe](https://yourstore.com/unsubscribe) | [Update Preferences](https://yourstore.com/preferences)\n  `,\n  date: new Date().toISOString()\n};\n\nreturn [{ json: newsletter }];"
+      },
+      "name": "Generate Newsletter",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        460,
+        800
+      ]
+    }
+  ],
+  "connections": {
+    "New Lead Webhook": {
+      "main": [
+        [
+          {
+            "node": "Score Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Lead": {
+      "main": [
+        [
+          {
+            "node": "Hot Lead?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Warm Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hot Lead?": {
+      "main": [
+        [
+          {
+            "node": "Send Hot Lead Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Warm Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Warm Lead?": {
+      "main": [
+        [
+          {
+            "node": "Send Warm Lead Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Cold Lead Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Newsletter": {
+      "main": [
+        [
+          {
+            "node": "Generate Newsletter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "id": "marketing-automation"
+}

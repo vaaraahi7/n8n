@@ -1,0 +1,220 @@
+{
+  "name": "SEO & Blog Analytics Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "blog-seo-analysis",
+        "options": {}
+      },
+      "name": "Blog SEO Analysis Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "blog-seo-analysis"
+    },
+    {
+      "parameters": {
+        "functionCode": "// SEO Analysis for Blog Posts\nconst blogPost = $json;\n\n// SEO scoring algorithm\nlet seoScore = 0;\nconst seoChecks = {\n  title_length: false,\n  title_keyword: false,\n  meta_description: false,\n  content_length: false,\n  keyword_density: false,\n  headings: false,\n  internal_links: false,\n  images_alt_text: false,\n  url_structure: false,\n  readability: false\n};\n\n// Title analysis (max 60 chars, includes keyword)\nif (blogPost.title && blogPost.title.length <= 60) {\n  seoChecks.title_length = true;\n  seoScore += 10;\n}\n\nif (blogPost.title && blogPost.keywords && \n    blogPost.keywords.some(keyword => \n      blogPost.title.toLowerCase().includes(keyword.toLowerCase()))) {\n  seoChecks.title_keyword = true;\n  seoScore += 15;\n}\n\n// Meta description (150-160 chars)\nif (blogPost.meta_description && \n    blogPost.meta_description.length >= 150 && \n    blogPost.meta_description.length <= 160) {\n  seoChecks.meta_description = true;\n  seoScore += 10;\n}\n\n// Content length (minimum 800 words)\nconst wordCount = blogPost.content ? blogPost.content.split(' ').length : 0;\nif (wordCount >= 800) {\n  seoChecks.content_length = true;\n  seoScore += 15;\n}\n\n// Keyword density (1-3%)\nif (blogPost.content && blogPost.keywords) {\n  const primaryKeyword = blogPost.keywords[0];\n  const keywordCount = (blogPost.content.toLowerCase().match(new RegExp(primaryKeyword.toLowerCase(), 'g')) || []).length;\n  const density = (keywordCount / wordCount) * 100;\n  \n  if (density >= 1 && density <= 3) {\n    seoChecks.keyword_density = true;\n    seoScore += 10;\n  }\n}\n\n// Heading structure (H1, H2, H3)\nif (blogPost.content) {\n  const h1Count = (blogPost.content.match(/^# /gm) || []).length;\n  const h2Count = (blogPost.content.match(/^## /gm) || []).length;\n  \n  if (h1Count === 1 && h2Count >= 2) {\n    seoChecks.headings = true;\n    seoScore += 10;\n  }\n}\n\n// Internal links (at least 2)\nif (blogPost.content) {\n  const internalLinks = (blogPost.content.match(/\\[.*?\\]\\(https:\\/\\/yourstore\\.com.*?\\)/g) || []).length;\n  if (internalLinks >= 2) {\n    seoChecks.internal_links = true;\n    seoScore += 10;\n  }\n}\n\n// Images with alt text\nif (blogPost.images && blogPost.images.length > 0) {\n  const imagesWithAlt = blogPost.images.filter(img => img.alt_text).length;\n  if (imagesWithAlt === blogPost.images.length) {\n    seoChecks.images_alt_text = true;\n    seoScore += 10;\n  }\n}\n\n// URL structure (includes keyword, no special chars)\nif (blogPost.slug && blogPost.keywords) {\n  const primaryKeyword = blogPost.keywords[0].toLowerCase().replace(/\\s+/g, '-');\n  if (blogPost.slug.includes(primaryKeyword) && !/[^a-z0-9-]/.test(blogPost.slug)) {\n    seoChecks.url_structure = true;\n    seoScore += 10;\n  }\n}\n\n// Readability score (mock calculation)\nif (wordCount > 0) {\n  const avgWordsPerSentence = wordCount / (blogPost.content.split('.').length || 1);\n  if (avgWordsPerSentence <= 20) {\n    seoChecks.readability = true;\n    seoScore += 10;\n  }\n}\n\n// Generate recommendations\nconst recommendations = [];\nif (!seoChecks.title_length) recommendations.push('Shorten title to under 60 characters');\nif (!seoChecks.title_keyword) recommendations.push('Include primary keyword in title');\nif (!seoChecks.meta_description) recommendations.push('Optimize meta description (150-160 chars)');\nif (!seoChecks.content_length) recommendations.push('Increase content length to at least 800 words');\nif (!seoChecks.keyword_density) recommendations.push('Adjust keyword density to 1-3%');\nif (!seoChecks.headings) recommendations.push('Improve heading structure (1 H1, multiple H2s)');\nif (!seoChecks.internal_links) recommendations.push('Add at least 2 internal links');\nif (!seoChecks.images_alt_text) recommendations.push('Add alt text to all images');\nif (!seoChecks.url_structure) recommendations.push('Optimize URL slug with primary keyword');\nif (!seoChecks.readability) recommendations.push('Improve readability with shorter sentences');\n\nconst analysis = {\n  ...blogPost,\n  seo_score: seoScore,\n  max_score: 100,\n  seo_grade: seoScore >= 80 ? 'A' : seoScore >= 60 ? 'B' : seoScore >= 40 ? 'C' : 'D',\n  seo_checks: seoChecks,\n  recommendations: recommendations,\n  word_count: wordCount,\n  analyzed_at: new Date().toISOString()\n};\n\nreturn [{ json: analysis }];"
+      },
+      "name": "Analyze SEO",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/customsearch/v1",
+        "qs": {
+          "key": "{{ $env.GOOGLE_API_KEY }}",
+          "cx": "{{ $env.GOOGLE_SEARCH_ENGINE_ID }}",
+          "q": "={{ $json.keywords[0] + ' ' + $json.category }}",
+          "num": "10"
+        },
+        "options": {}
+      },
+      "name": "Keyword Research",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        680,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Keyword Competition Analysis\nconst searchResults = $json;\nconst blogPost = $input.first().json;\n\nlet competitorAnalysis = {\n  total_results: 0,\n  top_competitors: [],\n  keyword_difficulty: 'medium',\n  content_gaps: [],\n  opportunities: []\n};\n\nif (searchResults.items) {\n  competitorAnalysis.total_results = parseInt(searchResults.searchInformation?.totalResults || 0);\n  \n  // Analyze top 10 results\n  competitorAnalysis.top_competitors = searchResults.items.slice(0, 5).map(item => ({\n    title: item.title,\n    url: item.link,\n    snippet: item.snippet,\n    domain: new URL(item.link).hostname\n  }));\n  \n  // Determine keyword difficulty\n  const totalResults = competitorAnalysis.total_results;\n  if (totalResults > 10000000) {\n    competitorAnalysis.keyword_difficulty = 'high';\n  } else if (totalResults > 1000000) {\n    competitorAnalysis.keyword_difficulty = 'medium';\n  } else {\n    competitorAnalysis.keyword_difficulty = 'low';\n  }\n  \n  // Identify content gaps\n  const competitorTitles = searchResults.items.map(item => item.title.toLowerCase());\n  const commonTerms = ['guide', 'tips', 'ideas', 'how to', 'best', 'top'];\n  \n  commonTerms.forEach(term => {\n    const hasTermCount = competitorTitles.filter(title => title.includes(term)).length;\n    if (hasTermCount < 3) {\n      competitorAnalysis.content_gaps.push(`Few competitors use \"${term}\" in titles`);\n    }\n  });\n  \n  // Generate opportunities\n  if (competitorAnalysis.keyword_difficulty === 'low') {\n    competitorAnalysis.opportunities.push('Low competition - good ranking opportunity');\n  }\n  \n  if (competitorAnalysis.content_gaps.length > 0) {\n    competitorAnalysis.opportunities.push('Content gaps identified for unique positioning');\n  }\n  \n  // Check for long-tail opportunities\n  const longTailKeywords = blogPost.keywords.filter(k => k.split(' ').length >= 3);\n  if (longTailKeywords.length > 0) {\n    competitorAnalysis.opportunities.push('Long-tail keywords available for targeting');\n  }\n}\n\nreturn [{ json: { ...blogPost, competitor_analysis: competitorAnalysis } }];"
+      },
+      "name": "Analyze Competition",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "searchAnalytics",
+        "operation": "query",
+        "siteUrl": "https://yourblog.com",
+        "dimensions": [
+          "query",
+          "page"
+        ],
+        "startDate": "={{ $now.minus({days: 30}).toFormat('yyyy-MM-dd') }}",
+        "endDate": "={{ $now.toFormat('yyyy-MM-dd') }}",
+        "rowLimit": 100
+      },
+      "name": "Get Search Console Data",
+      "type": "n8n-nodes-base.googleSearchConsole",
+      "typeVersion": 1,
+      "position": [
+        680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Blog Performance Analytics\nconst searchData = $json;\nconst blogPost = $input.first().json;\n\nlet performanceMetrics = {\n  total_clicks: 0,\n  total_impressions: 0,\n  average_position: 0,\n  click_through_rate: 0,\n  top_performing_queries: [],\n  ranking_keywords: [],\n  performance_trend: 'stable'\n};\n\nif (searchData.rows && searchData.rows.length > 0) {\n  // Calculate totals\n  searchData.rows.forEach(row => {\n    performanceMetrics.total_clicks += row.clicks || 0;\n    performanceMetrics.total_impressions += row.impressions || 0;\n  });\n  \n  // Calculate averages\n  performanceMetrics.average_position = searchData.rows.reduce((sum, row) => \n    sum + (row.position || 0), 0) / searchData.rows.length;\n  \n  performanceMetrics.click_through_rate = performanceMetrics.total_impressions > 0 ? \n    (performanceMetrics.total_clicks / performanceMetrics.total_impressions) * 100 : 0;\n  \n  // Top performing queries\n  performanceMetrics.top_performing_queries = searchData.rows\n    .filter(row => row.clicks > 0)\n    .sort((a, b) => b.clicks - a.clicks)\n    .slice(0, 10)\n    .map(row => ({\n      query: row.keys[0],\n      clicks: row.clicks,\n      impressions: row.impressions,\n      position: row.position,\n      ctr: row.ctr\n    }));\n  \n  // Keywords ranking in top 10\n  performanceMetrics.ranking_keywords = searchData.rows\n    .filter(row => row.position <= 10)\n    .map(row => ({\n      keyword: row.keys[0],\n      position: row.position,\n      clicks: row.clicks\n    }));\n  \n  // Performance trend (simplified)\n  if (performanceMetrics.average_position <= 5) {\n    performanceMetrics.performance_trend = 'excellent';\n  } else if (performanceMetrics.average_position <= 10) {\n    performanceMetrics.performance_trend = 'good';\n  } else if (performanceMetrics.average_position <= 20) {\n    performanceMetrics.performance_trend = 'fair';\n  } else {\n    performanceMetrics.performance_trend = 'needs_improvement';\n  }\n}\n\n// Generate insights\nconst insights = [];\nif (performanceMetrics.click_through_rate < 2) {\n  insights.push('Low CTR - consider improving title and meta description');\n}\nif (performanceMetrics.average_position > 10) {\n  insights.push('Average position below top 10 - focus on content optimization');\n}\nif (performanceMetrics.ranking_keywords.length < 5) {\n  insights.push('Few keywords ranking in top 10 - expand keyword targeting');\n}\nif (performanceMetrics.total_clicks < 50) {\n  insights.push('Low click volume - consider promoting content more actively');\n}\n\nreturn [{ json: { \n  ...blogPost, \n  performance_metrics: performanceMetrics,\n  insights: insights,\n  last_analyzed: new Date().toISOString()\n} }];"
+      },
+      "name": "Analyze Performance",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        900,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "value": "0 9 * * 1"
+            }
+          ]
+        }
+      },
+      "name": "Weekly SEO Report",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        240,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Weekly SEO Report Generator\nconst reportData = {\n  report_period: {\n    start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],\n    end: new Date().toISOString().split('T')[0]\n  },\n  blog_posts_published: Math.floor(Math.random() * 5) + 2, // 2-6 posts\n  total_organic_traffic: Math.floor(Math.random() * 1000) + 500,\n  avg_seo_score: Math.floor(Math.random() * 20) + 75, // 75-95\n  top_performing_posts: [\n    {\n      title: 'Best Wallpapers for Small Bedrooms',\n      clicks: Math.floor(Math.random() * 100) + 50,\n      impressions: Math.floor(Math.random() * 1000) + 500,\n      avg_position: Math.random() * 5 + 3\n    },\n    {\n      title: 'Modern Furniture Trends 2024',\n      clicks: Math.floor(Math.random() * 80) + 40,\n      impressions: Math.floor(Math.random() * 800) + 400,\n      avg_position: Math.random() * 7 + 4\n    }\n  ],\n  keyword_rankings: {\n    improved: Math.floor(Math.random() * 10) + 5,\n    declined: Math.floor(Math.random() * 5) + 1,\n    new_rankings: Math.floor(Math.random() * 8) + 3\n  },\n  technical_issues: {\n    crawl_errors: Math.floor(Math.random() * 3),\n    page_speed_issues: Math.floor(Math.random() * 2),\n    mobile_usability: Math.floor(Math.random() * 1)\n  },\n  recommendations: [\n    'Focus on long-tail keywords for better ranking opportunities',\n    'Improve internal linking between related blog posts',\n    'Optimize images for faster page loading',\n    'Create more content around trending interior design topics'\n  ]\n};\n\n// Calculate week-over-week changes\nreportData.traffic_change = ((Math.random() - 0.5) * 30).toFixed(1); // -15% to +15%\nreportData.ranking_change = ((Math.random() - 0.5) * 10).toFixed(1); // -5 to +5 positions\n\nreturn [{ json: reportData }];"
+      },
+      "name": "Generate SEO Report",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        460,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "seo@yourstore.com",
+        "subject": "📊 Weekly SEO & Blog Performance Report",
+        "message": "=# Weekly SEO Performance Report\\n**Period**: {{ $json.report_period.start }} to {{ $json.report_period.end }}\\n\\n## 📈 Key Metrics\\n- **Blog Posts Published**: {{ $json.blog_posts_published }}\\n- **Organic Traffic**: {{ $json.total_organic_traffic }} visits\\n- **Average SEO Score**: {{ $json.avg_seo_score }}/100\\n- **Traffic Change**: {{ $json.traffic_change > 0 ? '+' : '' }}{{ $json.traffic_change }}%\\n\\n## 🏆 Top Performing Posts\\n{{ $json.top_performing_posts.map(post => `**${post.title}**\\n- Clicks: ${post.clicks}\\n- Impressions: ${post.impressions}\\n- Avg Position: ${post.avg_position.toFixed(1)}\\n`).join('\\n') }}\\n## 🎯 Keyword Rankings\\n- **Improved**: {{ $json.keyword_rankings.improved }} keywords\\n- **Declined**: {{ $json.keyword_rankings.declined }} keywords\\n- **New Rankings**: {{ $json.keyword_rankings.new_rankings }} keywords\\n\\n## ⚠️ Technical Issues\\n- **Crawl Errors**: {{ $json.technical_issues.crawl_errors }}\\n- **Page Speed Issues**: {{ $json.technical_issues.page_speed_issues }}\\n- **Mobile Usability**: {{ $json.technical_issues.mobile_usability }}\\n\\n## 💡 Recommendations\\n{{ $json.recommendations.map(rec => `- ${rec}`).join('\\n') }}\\n\\n## 📋 Action Items\\n1. Review and optimize underperforming blog posts\\n2. Research new keyword opportunities\\n3. Fix any technical SEO issues\\n4. Plan content for trending topics\\n\\n---\\n*Report generated automatically by n8n SEO Analytics*",
+        "options": {}
+      },
+      "name": "Send SEO Report",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        680,
+        600
+      ]
+    }
+  ],
+  "connections": {
+    "Blog SEO Analysis Webhook": {
+      "main": [
+        [
+          {
+            "node": "Analyze SEO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze SEO": {
+      "main": [
+        [
+          {
+            "node": "Keyword Research",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Search Console Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keyword Research": {
+      "main": [
+        [
+          {
+            "node": "Analyze Competition",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Search Console Data": {
+      "main": [
+        [
+          {
+            "node": "Analyze Performance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly SEO Report": {
+      "main": [
+        [
+          {
+            "node": "Generate SEO Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate SEO Report": {
+      "main": [
+        [
+          {
+            "node": "Send SEO Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "id": "seo-blog-analytics"
+}

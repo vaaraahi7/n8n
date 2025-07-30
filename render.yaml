@@ -1,0 +1,89 @@
+services:
+  - type: web
+    name: n8n-walltouch-automation
+    env: docker
+    repo: https://github.com/yourusername/n8n-walltouch-automation
+    branch: main
+    dockerfilePath: ./Dockerfile
+    region: oregon
+    plan: free
+    buildCommand: ""
+    startCommand: ""
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: N8N_BASIC_AUTH_ACTIVE
+        value: "true"
+      - key: N8N_BASIC_AUTH_USER
+        value: admin
+      - key: N8N_BASIC_AUTH_PASSWORD
+        generateValue: true
+      - key: N8N_HOST
+        value: n8n.walltouch.online
+      - key: WEBHOOK_URL
+        value: https://n8n.walltouch.online/
+      - key: N8N_PORT
+        value: "5678"
+      - key: N8N_PROTOCOL
+        value: https
+      - key: DB_TYPE
+        value: sqlite
+      - key: DB_SQLITE_DATABASE
+        value: /opt/render/project/src/data/database.sqlite
+      - key: N8N_SECURE_COOKIE
+        value: "true"
+      - key: N8N_JWT_AUTH_ACTIVE
+        value: "true"
+      - key: EXECUTIONS_PROCESS
+        value: main
+      - key: EXECUTIONS_MODE
+        value: regular
+      - key: N8N_METRICS
+        value: "false"
+      - key: GENERIC_TIMEZONE
+        value: UTC
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_SENDER
+        sync: false
+      - key: FACEBOOK_APP_ID
+        sync: false
+      - key: FACEBOOK_APP_SECRET
+        sync: false
+      - key: FACEBOOK_ACCESS_TOKEN
+        sync: false
+      - key: FACEBOOK_PAGE_ID
+        sync: false
+      - key: INSTAGRAM_ACCESS_TOKEN
+        sync: false
+      - key: INSTAGRAM_ACCOUNT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: WORDPRESS_URL
+        sync: false
+      - key: WORDPRESS_USERNAME
+        sync: false
+      - key: WORDPRESS_PASSWORD
+        sync: false
+      - key: SHOPIFY_SHOP_NAME
+        sync: false
+      - key: SHOPIFY_ACCESS_TOKEN
+        sync: false
+      - key: WOOCOMMERCE_URL
+        value: https://www.walltouch.online
+      - key: WOOCOMMERCE_CONSUMER_KEY
+        sync: false
+      - key: WOOCOMMERCE_CONSUMER_SECRET
+        sync: false

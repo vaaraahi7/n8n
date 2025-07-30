@@ -1,0 +1,281 @@
+{
+  "blog_templates": {
+    "wallpapers": {
+      "category_info": {
+        "name": "Wallpapers",
+        "description": "Transform your walls with our premium wallpaper collection",
+        "primary_keywords": ["wallpaper", "wall decor", "interior design", "home decoration"],
+        "target_audience": "homeowners, interior designers, DIY enthusiasts"
+      },
+      "post_types": {
+        "trend_guide": {
+          "title_templates": [
+            "2024 Wallpaper Trends: {trend_name} Takes Center Stage",
+            "The Ultimate Guide to {trend_name} Wallpapers",
+            "{season} Wallpaper Trends: What's Hot in {year}",
+            "From Classic to Contemporary: {trend_name} Wallpaper Ideas"
+          ],
+          "content_structure": {
+            "introduction": "Hook readers with current trend statistics and visual appeal",
+            "trend_analysis": "Deep dive into specific trend with examples",
+            "product_showcase": "Feature 3-5 relevant wallpaper products",
+            "styling_tips": "How to incorporate trend into different room types",
+            "conclusion": "Call-to-action with product links"
+          },
+          "seo_focus": "trend keywords + wallpaper + room types"
+        },
+        "how_to_guide": {
+          "title_templates": [
+            "How to Choose the Perfect Wallpaper for {room_type}",
+            "DIY Wallpaper Installation: A Step-by-Step Guide",
+            "Wallpaper Mistakes to Avoid: Expert Tips for {room_type}",
+            "Measuring for Wallpaper: The Complete Guide"
+          ],
+          "content_structure": {
+            "problem_statement": "Address common wallpaper challenges",
+            "step_by_step_solution": "Detailed instructions with tips",
+            "tools_and_materials": "What readers need to succeed",
+            "troubleshooting": "Common issues and solutions",
+            "conclusion": "Encouragement and product recommendations"
+          },
+          "seo_focus": "how-to keywords + wallpaper + specific techniques"
+        },
+        "room_specific": {
+          "title_templates": [
+            "Best Wallpapers for {room_type}: Style and Function Combined",
+            "Transform Your {room_type} with These Wallpaper Ideas",
+            "{room_type} Wallpaper Guide: Patterns, Colors, and Textures",
+            "Small {room_type}? These Wallpapers Will Make It Look Bigger"
+          ],
+          "room_types": ["living room", "bedroom", "bathroom", "kitchen", "dining room", "home office", "nursery"],
+          "content_structure": {
+            "room_analysis": "Specific considerations for the room type",
+            "style_options": "Different wallpaper styles that work",
+            "color_psychology": "How colors affect the room's mood",
+            "pattern_guidance": "Which patterns work best and why",
+            "product_recommendations": "Specific wallpapers for this room"
+          }
+        }
+      },
+      "seasonal_content": {
+        "spring": {
+          "themes": ["floral patterns", "fresh colors", "nature-inspired designs"],
+          "keywords": ["spring wallpaper", "floral wallpaper", "fresh home decor"]
+        },
+        "summer": {
+          "themes": ["bright colors", "tropical patterns", "light textures"],
+          "keywords": ["summer decor", "bright wallpaper", "tropical wallpaper"]
+        },
+        "fall": {
+          "themes": ["warm tones", "textured wallpapers", "cozy patterns"],
+          "keywords": ["fall wallpaper", "warm colors", "cozy home decor"]
+        },
+        "winter": {
+          "themes": ["rich colors", "luxury textures", "elegant patterns"],
+          "keywords": ["winter decor", "luxury wallpaper", "elegant home design"]
+        }
+      }
+    },
+    "furniture": {
+      "category_info": {
+        "name": "Furniture",
+        "description": "Quality furniture pieces for every room and style",
+        "primary_keywords": ["furniture", "home furnishing", "interior decor", "living room furniture"],
+        "target_audience": "homeowners, apartment dwellers, furniture shoppers"
+      },
+      "post_types": {
+        "buying_guide": {
+          "title_templates": [
+            "The Ultimate {furniture_type} Buying Guide for {year}",
+            "How to Choose the Perfect {furniture_type} for Your Home",
+            "{furniture_type} Shopping: What to Look for and Avoid",
+            "Best {furniture_type} for {room_type}: Complete Guide"
+          ],
+          "furniture_types": ["sofa", "dining table", "bed", "desk", "bookshelf", "coffee table", "wardrobe"],
+          "content_structure": {
+            "needs_assessment": "Help readers identify their specific needs",
+            "key_features": "Important features to consider",
+            "material_guide": "Different materials and their benefits",
+            "size_and_space": "How to choose the right size",
+            "budget_considerations": "Options for different price ranges",
+            "maintenance_tips": "How to care for the furniture"
+          }
+        },
+        "style_guide": {
+          "title_templates": [
+            "{style_name} Furniture: Creating the Perfect {room_type}",
+            "Mixing {style1} and {style2}: A Furniture Style Guide",
+            "Timeless {style_name} Furniture Pieces Every Home Needs",
+            "Budget-Friendly {style_name} Furniture Ideas"
+          ],
+          "styles": ["modern", "traditional", "scandinavian", "industrial", "bohemian", "minimalist", "rustic"],
+          "content_structure": {
+            "style_overview": "Characteristics of the furniture style",
+            "key_pieces": "Essential furniture items for this style",
+            "color_palette": "Colors that complement the style",
+            "mixing_tips": "How to blend with other styles",
+            "shopping_guide": "Where to find authentic pieces"
+          }
+        }
+      }
+    },
+    "home_decor": {
+      "category_info": {
+        "name": "Home Decor",
+        "description": "Decorative accessories and styling ideas for beautiful homes",
+        "primary_keywords": ["home decor", "interior accessories", "decorative items", "home styling"],
+        "target_audience": "homeowners, renters, interior design enthusiasts"
+      },
+      "post_types": {
+        "seasonal_decor": {
+          "title_templates": [
+            "{season} Home Decor: Fresh Ideas for Every Room",
+            "Transitioning Your Decor from {season1} to {season2}",
+            "{season} Decorating on a Budget: Maximum Impact Ideas",
+            "Cozy {season} Decor: Creating Warmth and Comfort"
+          ],
+          "content_structure": {
+            "seasonal_mood": "Capturing the essence of the season",
+            "color_schemes": "Seasonal color palettes",
+            "key_accessories": "Must-have decorative items",
+            "diy_projects": "Simple seasonal crafts",
+            "storage_tips": "Organizing seasonal decor"
+          }
+        },
+        "room_styling": {
+          "title_templates": [
+            "Styling Your {room_type}: Decor Ideas That Work",
+            "{room_type} Decor Mistakes and How to Fix Them",
+            "Small {room_type} Decor: Making the Most of Limited Space",
+            "Luxury {room_type} Decor on a Budget"
+          ],
+          "content_structure": {
+            "room_function": "Understanding the room's primary purpose",
+            "focal_points": "Creating visual interest",
+            "layering_techniques": "Building depth with accessories",
+            "personal_touches": "Adding personality to the space",
+            "maintenance": "Keeping decor looking fresh"
+          }
+        }
+      }
+    }
+  },
+  "content_formulas": {
+    "listicle": {
+      "structure": [
+        "Compelling headline with number",
+        "Brief introduction with hook",
+        "Numbered list with detailed explanations",
+        "Visual elements for each point",
+        "Conclusion with call-to-action"
+      ],
+      "seo_tips": [
+        "Include target keyword in headline",
+        "Use H2 tags for each list item",
+        "Add internal links to products",
+        "Include relevant images with alt text"
+      ]
+    },
+    "how_to": {
+      "structure": [
+        "Problem identification",
+        "Materials/tools needed",
+        "Step-by-step instructions",
+        "Tips and troubleshooting",
+        "Final result and next steps"
+      ],
+      "seo_tips": [
+        "Use 'how to' in title",
+        "Include FAQ section",
+        "Add schema markup for instructions",
+        "Link to related products"
+      ]
+    },
+    "trend_report": {
+      "structure": [
+        "Trend overview and statistics",
+        "Visual examples and inspiration",
+        "How to incorporate the trend",
+        "Product recommendations",
+        "Future predictions"
+      ],
+      "seo_tips": [
+        "Include current year in title",
+        "Use trending keywords",
+        "Add social sharing buttons",
+        "Create Pinterest-friendly images"
+      ]
+    }
+  },
+  "seo_optimization": {
+    "title_best_practices": [
+      "Include primary keyword near the beginning",
+      "Keep under 60 characters",
+      "Make it compelling and clickable",
+      "Include year for evergreen content"
+    ],
+    "meta_description": [
+      "Summarize the post in 150-160 characters",
+      "Include primary and secondary keywords",
+      "Add a call-to-action",
+      "Make it enticing to click"
+    ],
+    "content_optimization": [
+      "Use keyword in first paragraph",
+      "Include related keywords naturally",
+      "Add internal links to products and other posts",
+      "Use descriptive image alt text",
+      "Include FAQ section for voice search"
+    ],
+    "keyword_research": {
+      "primary_keywords": "Main topic keywords with good search volume",
+      "long_tail_keywords": "Specific phrases with lower competition",
+      "local_keywords": "Location-based terms if applicable",
+      "seasonal_keywords": "Time-sensitive trending terms"
+    }
+  },
+  "content_calendar": {
+    "weekly_schedule": {
+      "monday": "Trend and inspiration posts",
+      "wednesday": "How-to and educational content",
+      "friday": "Product features and room reveals"
+    },
+    "monthly_themes": {
+      "january": "New Year organization and fresh starts",
+      "february": "Cozy winter decor and Valentine's themes",
+      "march": "Spring refresh and color trends",
+      "april": "Easter decor and spring cleaning",
+      "may": "Mother's Day and outdoor living",
+      "june": "Summer decor and Father's Day",
+      "july": "Patriotic themes and summer entertaining",
+      "august": "Back-to-school organization",
+      "september": "Fall transitions and harvest themes",
+      "october": "Halloween and autumn decor",
+      "november": "Thanksgiving and gratitude themes",
+      "december": "Holiday decor and year-end reflection"
+    }
+  },
+  "engagement_strategies": {
+    "call_to_actions": [
+      "Shop the look",
+      "Get the tutorial",
+      "Save for later",
+      "Share your version",
+      "Ask our experts"
+    ],
+    "social_media_hooks": [
+      "Before and after reveals",
+      "Step-by-step processes",
+      "Behind-the-scenes content",
+      "User-generated content features",
+      "Quick tips and tricks"
+    ],
+    "email_integration": [
+      "Newsletter exclusive content",
+      "Early access to new posts",
+      "Downloadable guides and checklists",
+      "Personalized recommendations",
+      "Seasonal inspiration roundups"
+    ]
+  }
+}

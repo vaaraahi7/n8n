@@ -1,0 +1,49 @@
+{
+  "version": 2,
+  "name": "n8n-ecommerce-automation",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/webhook/(.*)",
+      "dest": "/api/webhook/$1"
+    },
+    {
+      "src": "/healthz",
+      "dest": "/api/health"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/n8n"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "N8N_BASIC_AUTH_ACTIVE": "true",
+    "N8N_BASIC_AUTH_USER": "@n8n_user",
+    "N8N_BASIC_AUTH_PASSWORD": "@n8n_password",
+    "WEBHOOK_URL": "https://n8n.yourdomain.com/",
+    "N8N_HOST": "n8n.yourdomain.com",
+    "N8N_PORT": "443",
+    "N8N_PROTOCOL": "https",
+    "DB_TYPE": "sqlite",
+    "EXECUTIONS_PROCESS": "main",
+    "EXECUTIONS_MODE": "regular",
+    "N8N_METRICS": "false",
+    "GENERIC_TIMEZONE": "UTC"
+  },
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 30
+    }
+  },
+  "regions": ["iad1"],
+  "github": {
+    "silent": true
+  }
+}

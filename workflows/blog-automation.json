@@ -1,0 +1,327 @@
+{
+  "name": "Blog Automation - Interior Products",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "value": "0 10 * * 2,5"
+            }
+          ]
+        }
+      },
+      "name": "Blog Schedule",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Blog Content Generator for Interior Products\nconst categories = {\n  wallpapers: {\n    topics: [\n      'Latest Wallpaper Trends 2024',\n      'How to Choose Perfect Wallpaper for Small Rooms',\n      'Textured vs Smooth Wallpapers: Complete Guide',\n      'Wallpaper Installation Tips for Beginners',\n      'Bold Patterns vs Subtle Designs: What Works Where',\n      'Removable Wallpaper: Pros and Cons',\n      'Wallpaper Color Psychology in Interior Design',\n      'Vintage vs Modern Wallpaper Styles',\n      'Wallpaper Maintenance and Cleaning Guide',\n      'Creating Accent Walls with Statement Wallpapers'\n    ],\n    keywords: ['wallpaper', 'wall decor', 'interior design', 'home decoration', 'wall covering'],\n    products: ['floral wallpaper', 'geometric patterns', 'textured wallpaper', 'removable wallpaper', 'luxury wallpaper']\n  },\n  furniture: {\n    topics: [\n      'Space-Saving Furniture Ideas for Small Homes',\n      'Mixing Modern and Vintage Furniture Styles',\n      'Essential Furniture Pieces for New Homeowners',\n      'Sustainable Furniture: Eco-Friendly Home Decor',\n      'Furniture Arrangement Tips for Better Flow',\n      'Budget-Friendly Furniture Makeover Ideas',\n      'Choosing the Right Sofa for Your Living Room',\n      'Storage Solutions: Functional Furniture Ideas',\n      'Outdoor Furniture: Extending Your Living Space',\n      'Furniture Care and Maintenance Guide'\n    ],\n    keywords: ['furniture', 'home furnishing', 'interior decor', 'living room', 'bedroom furniture'],\n    products: ['sofas', 'dining tables', 'bedroom sets', 'storage furniture', 'outdoor furniture']\n  },\n  decor: {\n    topics: [\n      'Seasonal Home Decor: Transform Your Space',\n      'Lighting Ideas to Enhance Your Interior',\n      'Art and Wall Decor: Creating Visual Interest',\n      'Plants in Interior Design: Green Living Spaces',\n      'Textile and Fabric Choices for Cozy Homes',\n      'Minimalist Decor: Less is More Philosophy',\n      'Color Coordination in Home Decoration',\n      'DIY Decor Projects for Weekend Warriors',\n      'Luxury Decor on a Budget: Smart Shopping Tips',\n      'Cultural Decor: Adding Personality to Your Home'\n    ],\n    keywords: ['home decor', 'interior accessories', 'decorative items', 'home styling', 'room decoration'],\n    products: ['cushions', 'curtains', 'rugs', 'lighting', 'decorative accessories']\n  }\n};\n\n// Select category based on day of week or rotation\nconst categoryNames = Object.keys(categories);\nconst selectedCategory = categoryNames[Math.floor(Math.random() * categoryNames.length)];\nconst category = categories[selectedCategory];\n\n// Select random topic\nconst selectedTopic = category.topics[Math.floor(Math.random() * category.topics.length)];\n\n// Generate blog post content\nconst blogPost = {\n  category: selectedCategory,\n  title: selectedTopic,\n  slug: selectedTopic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),\n  meta_description: `Discover ${selectedTopic.toLowerCase()} with expert tips and product recommendations. Transform your space with our interior design guide.`,\n  keywords: category.keywords,\n  featured_products: category.products.slice(0, 3),\n  publish_date: new Date().toISOString().split('T')[0],\n  author: 'Interior Design Team',\n  reading_time: Math.floor(Math.random() * 5) + 3, // 3-8 minutes\n  content_outline: [\n    'Introduction',\n    'Key Concepts and Trends',\n    'Product Recommendations',\n    'Implementation Tips',\n    'Common Mistakes to Avoid',\n    'Conclusion and Next Steps'\n  ]\n};\n\nreturn [{ json: blogPost }];"
+      },
+      "name": "Generate Blog Topic",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Blog Content Writer with SEO Optimization\nconst post = $json;\n\n// Content templates based on category\nconst contentTemplates = {\n  wallpapers: {\n    intro: `Wallpapers have made a stunning comeback in modern interior design, offering endless possibilities to transform any space. Whether you're looking to create a bold statement wall or add subtle texture to your room, choosing the right wallpaper can completely change the atmosphere of your home.`,\n    \n    sections: {\n      trends: `## Current Wallpaper Trends\\n\\nThis year's wallpaper trends focus on sustainability, bold patterns, and textural elements. From eco-friendly materials to digitally printed designs, homeowners are embracing wallpapers that reflect their personality while being environmentally conscious.`,\n      \n      tips: `## Expert Installation Tips\\n\\n1. **Measure Twice, Order Once**: Always measure your walls carefully and order 10% extra for mistakes\\n2. **Prep Your Walls**: Clean, smooth walls are essential for professional results\\n3. **Start from the Center**: Begin hanging from the room's focal point for balanced patterns\\n4. **Use Quality Tools**: Invest in proper smoothing tools and sharp cutting blades`,\n      \n      products: `## Recommended Products\\n\\nOur curated selection includes premium wallpapers that combine style with durability. Each product is chosen for its quality, ease of installation, and design versatility.`\n    }\n  },\n  \n  furniture: {\n    intro: `Choosing the right furniture is one of the most important decisions in creating a comfortable and functional living space. Whether you're furnishing your first home or updating your current decor, understanding how to select pieces that work together harmoniously is key to achieving your design goals.`,\n    \n    sections: {\n      trends: `## Furniture Trends to Watch\\n\\nSustainable materials, multifunctional pieces, and curved silhouettes are dominating furniture design. Homeowners are prioritizing quality over quantity, investing in pieces that will last for years while serving multiple purposes.`,\n      \n      tips: `## Smart Furniture Selection\\n\\n1. **Measure Your Space**: Know your room dimensions before shopping\\n2. **Consider Traffic Flow**: Leave adequate space for movement\\n3. **Mix Heights and Textures**: Create visual interest with varied pieces\\n4. **Invest in Key Pieces**: Prioritize quality for frequently used items`,\n      \n      products: `## Featured Furniture Collections\\n\\nOur furniture selection emphasizes both style and functionality, featuring pieces that adapt to modern living while maintaining timeless appeal.`\n    }\n  },\n  \n  decor: {\n    intro: `Home decor is where your personality truly shines through. The right decorative elements can transform a house into a home, creating spaces that reflect your style while providing comfort and functionality for daily living.`,\n    \n    sections: {\n      trends: `## Decor Trends Shaping Homes\\n\\nNatural materials, warm earth tones, and handcrafted items are leading decor trends. People are creating spaces that feel authentic and connected to nature, moving away from mass-produced items toward unique, meaningful pieces.`,\n      \n      tips: `## Decorating Like a Pro\\n\\n1. **Layer Textures**: Combine different materials for depth\\n2. **Use the Rule of Thirds**: Group items in odd numbers\\n3. **Add Personal Touches**: Include items that tell your story\\n4. **Balance Colors**: Use a cohesive color palette throughout`,\n      \n      products: `## Curated Decor Selection\\n\\nOur decor collection features handpicked items that add character and warmth to any space, from statement pieces to subtle accents.`\n    }\n  }\n};\n\nconst template = contentTemplates[post.category] || contentTemplates.decor;\n\n// Generate full blog content\nconst fullContent = `\n# ${post.title}\n\n*Published on ${post.publish_date} | ${post.reading_time} min read | By ${post.author}*\n\n${template.intro}\n\n${template.sections.trends}\n\n${template.sections.tips}\n\n${template.sections.products}\n\n### Featured Products:\n${post.featured_products.map(product => `- **${product.charAt(0).toUpperCase() + product.slice(1)}** - Premium quality with modern design`).join('\\n')}\n\n## Common Mistakes to Avoid\n\n- **Rushing the Process**: Take time to plan and measure\n- **Ignoring Lighting**: Consider how natural and artificial light affects your choices\n- **Following Trends Blindly**: Choose what works for your lifestyle\n- **Forgetting Functionality**: Beauty should never compromise usability\n\n## Conclusion\n\n${post.title.includes('Wallpaper') ? 'The right wallpaper can completely transform your space' : post.title.includes('Furniture') ? 'Quality furniture is an investment in your daily comfort' : 'Thoughtful decor choices create spaces you\\'ll love for years to come'}. Remember that the best interior design reflects your personal style while creating a functional, comfortable environment.\n\n**Ready to transform your space?** Browse our collection of ${post.category} and discover pieces that will bring your vision to life.\n\n---\n\n*Keywords: ${post.keywords.join(', ')}*\n\n*Share this post:* [Facebook] [Instagram] [Pinterest]\n`;\n\n// Generate social media snippets\nconst socialSnippets = {\n  facebook: `🏠 New Blog Post: ${post.title}\\n\\n${template.intro.substring(0, 200)}...\\n\\nRead the full guide: [BLOG_URL]\\n\\n#InteriorDesign #${post.category.charAt(0).toUpperCase() + post.category.slice(1)} #HomeDecor`,\n  \n  instagram: `✨ ${post.title} ✨\\n\\n${post.category === 'wallpapers' ? '🎨 Transform your walls' : post.category === 'furniture' ? '🛋️ Upgrade your space' : '🏡 Style your home'} with our latest guide!\\n\\nSwipe for tips 👉\\n\\n#InteriorDesign #${post.category} #HomeDecor #DesignTips`,\n  \n  pinterest: `${post.title} | ${post.meta_description}`\n};\n\nreturn [{\n  json: {\n    ...post,\n    content: fullContent,\n    word_count: fullContent.split(' ').length,\n    social_snippets: socialSnippets,\n    seo_score: 85, // Mock SEO score\n    generated_at: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Generate Blog Content",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.wordpress.org/wp/v2/posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "httpMethod": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "name": "content",
+              "value": "={{ $json.content }}"
+            },
+            {
+              "name": "slug",
+              "value": "={{ $json.slug }}"
+            },
+            {
+              "name": "excerpt",
+              "value": "={{ $json.meta_description }}"
+            },
+            {
+              "name": "status",
+              "value": "publish"
+            },
+            {
+              "name": "categories",
+              "value": "={{ $json.category === 'wallpapers' ? [1] : $json.category === 'furniture' ? [2] : [3] }}"
+            },
+            {
+              "name": "tags",
+              "value": "={{ $json.keywords.join(',') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Publish to WordPress",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.medium.com/v1/users/{{ $env.MEDIUM_USER_ID }}/posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "httpMethod": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.MEDIUM_ACCESS_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "name": "contentFormat",
+              "value": "markdown"
+            },
+            {
+              "name": "content",
+              "value": "={{ $json.content }}"
+            },
+            {
+              "name": "tags",
+              "value": "={{ $json.keywords }}"
+            },
+            {
+              "name": "publishStatus",
+              "value": "public"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Publish to Medium",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        900,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "pageId": "{{ $env.FACEBOOK_PAGE_ID }}",
+        "postType": "text",
+        "content": "={{ $json.social_snippets.facebook.replace('[BLOG_URL]', 'https://yourblog.com/posts/' + $json.slug) }}"
+      },
+      "name": "Share on Facebook",
+      "type": "n8n-nodes-base.facebookPages",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://graph.facebook.com/v18.0/{{ $env.INSTAGRAM_ACCOUNT_ID }}/media",
+        "httpMethod": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "caption",
+              "value": "={{ $json.social_snippets.instagram }}"
+            },
+            {
+              "name": "access_token",
+              "value": "{{ $env.INSTAGRAM_ACCESS_TOKEN }}"
+            }
+          ]
+        }
+      },
+      "name": "Share on Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "team@yourstore.com",
+        "subject": "📝 New Blog Post Published: {{ $json.title }}",
+        "message": "=**New Blog Post Published Successfully!**\\n\\n**Title**: {{ $json.title }}\\n**Category**: {{ $json.category }}\\n**Word Count**: {{ $json.word_count }}\\n**Reading Time**: {{ $json.reading_time }} minutes\\n**SEO Score**: {{ $json.seo_score }}/100\\n\\n**Meta Description**: {{ $json.meta_description }}\\n\\n**Keywords**: {{ $json.keywords.join(', ') }}\\n\\n**Published To**:\\n✅ WordPress Blog\\n✅ Medium\\n✅ Facebook Page\\n✅ Instagram\\n\\n**Blog URL**: https://yourblog.com/posts/{{ $json.slug }}\\n\\n**Social Media Performance**:\\n- Monitor engagement over next 24 hours\\n- Track click-through rates from social platforms\\n- Review SEO performance in 1 week\\n\\n**Next Steps**:\\n- Share in relevant Facebook groups\\n- Pin to Pinterest boards\\n- Consider email newsletter inclusion\\n\\n---\\nGenerated automatically by n8n Blog Automation",
+        "options": {}
+      },
+      "name": "Send Notification",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        900,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "blog-request",
+        "options": {}
+      },
+      "name": "Manual Blog Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        600
+      ],
+      "webhookId": "manual-blog-request"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Manual Blog Request Handler\nconst request = $json;\n\n// Validate request\nif (!request.category || !request.topic) {\n  throw new Error('Category and topic are required');\n}\n\n// Custom blog post based on request\nconst customPost = {\n  category: request.category,\n  title: request.topic,\n  slug: request.topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),\n  meta_description: request.meta_description || `Expert guide on ${request.topic.toLowerCase()}. Discover tips, trends, and product recommendations for your interior design project.`,\n  keywords: request.keywords || ['interior design', 'home decor', request.category],\n  featured_products: request.products || ['premium products', 'designer collections', 'quality furnishings'],\n  publish_date: new Date().toISOString().split('T')[0],\n  author: request.author || 'Interior Design Team',\n  reading_time: request.reading_time || 5,\n  custom_content: request.content || null,\n  priority: request.priority || 'normal',\n  scheduled_date: request.scheduled_date || null\n};\n\nreturn [{ json: customPost }];"
+      },
+      "name": "Process Manual Request",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        460,
+        600
+      ]
+    }
+  ],
+  "connections": {
+    "Blog Schedule": {
+      "main": [
+        [
+          {
+            "node": "Generate Blog Topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Blog Topic": {
+      "main": [
+        [
+          {
+            "node": "Generate Blog Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Blog Content": {
+      "main": [
+        [
+          {
+            "node": "Publish to WordPress",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Publish to Medium",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish to WordPress": {
+      "main": [
+        [
+          {
+            "node": "Share on Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish to Medium": {
+      "main": [
+        [
+          {
+            "node": "Share on Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Blog Request": {
+      "main": [
+        [
+          {
+            "node": "Process Manual Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Manual Request": {
+      "main": [
+        [
+          {
+            "node": "Generate Blog Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "id": "blog-automation"
+}

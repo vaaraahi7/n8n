@@ -1,0 +1,248 @@
+{
+  "name": "Sales Automation Suite",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-order",
+        "options": {}
+      },
+      "name": "New Order Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "new-order-webhook"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Order Processing Logic\nconst order = $json;\n\n// Calculate order metrics\nconst orderValue = order.total || 0;\nconst itemCount = order.items ? order.items.length : 0;\nconst isHighValue = orderValue > 500;\nconst isFirstOrder = order.customer_order_count === 1;\n\n// Determine order priority\nlet priority = 'normal';\nif (isHighValue) priority = 'high';\nif (orderValue > 1000) priority = 'urgent';\n\n// Calculate estimated processing time\nlet processingTime = '1-2 business days';\nif (priority === 'high') processingTime = '24 hours';\nif (priority === 'urgent') processingTime = '12 hours';\n\n// Check for special handling requirements\nconst specialHandling = [];\nif (order.items) {\n  order.items.forEach(item => {\n    if (item.fragile) specialHandling.push('fragile');\n    if (item.oversized) specialHandling.push('oversized');\n    if (item.perishable) specialHandling.push('perishable');\n  });\n}\n\n// Generate order summary\nconst processedOrder = {\n  ...order,\n  order_id: order.id || order.order_id,\n  processed_at: new Date().toISOString(),\n  priority: priority,\n  estimated_processing: processingTime,\n  special_handling: specialHandling,\n  is_high_value: isHighValue,\n  is_first_order: isFirstOrder,\n  item_count: itemCount,\n  needs_review: isHighValue || specialHandling.length > 0,\n  customer_email: order.customer?.email || order.email,\n  customer_name: order.customer?.name || order.billing_address?.name || 'Customer',\n  shipping_address: order.shipping_address || order.address\n};\n\nreturn [{ json: processedOrder }];"
+      },
+      "name": "Process Order",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.needs_review }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Needs Review?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "orders@yourstore.com",
+        "subject": "🔍 Order Review Required - #{{ $json.order_id }}",
+        "message": "=**Order Requires Manual Review**\\n\\n**Order ID**: {{ $json.order_id }}\\n**Customer**: {{ $json.customer_name }}\\n**Email**: {{ $json.customer_email }}\\n**Total**: ${{ $json.total }}\\n**Priority**: {{ $json.priority.toUpperCase() }}\\n\\n**Review Reasons**:\\n{{ $json.is_high_value ? '• High value order (>$500)\\n' : '' }}{{ $json.special_handling.length > 0 ? '• Special handling required: ' + $json.special_handling.join(', ') + '\\n' : '' }}\\n**Items** ({{ $json.item_count }}):\\n{{ $json.items ? $json.items.map(item => `• ${item.name} - Qty: ${item.quantity} - $${item.price}`).join('\\n') : 'Items not available' }}\\n\\n**Shipping Address**:\\n{{ $json.shipping_address ? Object.values($json.shipping_address).join('\\n') : 'Address not available' }}\\n\\n**Action Required**: Please review and approve this order for processing.\\n\\n[View Order Details](https://yourstore.com/admin/orders/{{ $json.order_id }})",
+        "options": {}
+      },
+      "name": "Send Review Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Inventory Update Logic\nconst order = $json;\nconst inventoryUpdates = [];\n\nif (order.items) {\n  order.items.forEach(item => {\n    inventoryUpdates.push({\n      product_id: item.product_id || item.id,\n      sku: item.sku,\n      quantity_sold: item.quantity,\n      current_stock: item.current_stock || 0,\n      new_stock: (item.current_stock || 0) - item.quantity,\n      needs_restock: ((item.current_stock || 0) - item.quantity) < (item.restock_threshold || 10),\n      product_name: item.name\n    });\n  });\n}\n\nreturn inventoryUpdates.map(update => ({ json: update }));"
+      },
+      "name": "Update Inventory",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        680,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.needs_restock }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Low Stock?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        900,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "inventory@yourstore.com",
+        "subject": "📦 Low Stock Alert - {{ $json.product_name }}",
+        "message": "=**Low Stock Alert**\\n\\n**Product**: {{ $json.product_name }}\\n**SKU**: {{ $json.sku }}\\n**Current Stock**: {{ $json.new_stock }}\\n**Quantity Sold**: {{ $json.quantity_sold }}\\n\\n⚠️ **Action Required**: This product is running low and needs restocking.\\n\\n**Recommendations**:\\n• Reorder immediately if this is a popular item\\n• Check supplier availability\\n• Consider temporary promotion to clear remaining stock\\n\\n[Manage Inventory](https://yourstore.com/admin/inventory/{{ $json.product_id }})",
+        "options": {}
+      },
+      "name": "Send Stock Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "value": "0 18 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Daily Sales Report",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        240,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Sales Report Generator\nconst today = new Date();\nconst yesterday = new Date(today);\nyesterday.setDate(yesterday.getDate() - 1);\n\n// Mock sales data - in real implementation, this would fetch from your database\nconst salesData = {\n  date: yesterday.toISOString().split('T')[0],\n  total_orders: Math.floor(Math.random() * 50) + 20,\n  total_revenue: (Math.random() * 5000 + 1000).toFixed(2),\n  avg_order_value: 0,\n  top_products: [\n    { name: 'Premium Widget', sales: Math.floor(Math.random() * 20) + 5, revenue: (Math.random() * 1000 + 200).toFixed(2) },\n    { name: 'Deluxe Gadget', sales: Math.floor(Math.random() * 15) + 3, revenue: (Math.random() * 800 + 150).toFixed(2) },\n    { name: 'Standard Tool', sales: Math.floor(Math.random() * 25) + 8, revenue: (Math.random() * 600 + 100).toFixed(2) }\n  ],\n  new_customers: Math.floor(Math.random() * 15) + 5,\n  returning_customers: Math.floor(Math.random() * 35) + 15,\n  conversion_rate: (Math.random() * 3 + 2).toFixed(2),\n  traffic_sources: {\n    organic: Math.floor(Math.random() * 40) + 30,\n    paid: Math.floor(Math.random() * 25) + 15,\n    social: Math.floor(Math.random() * 20) + 10,\n    direct: Math.floor(Math.random() * 30) + 20,\n    referral: Math.floor(Math.random() * 15) + 5\n  }\n};\n\n// Calculate average order value\nsalesData.avg_order_value = (salesData.total_revenue / salesData.total_orders).toFixed(2);\n\n// Calculate week-over-week growth (mock)\nconst weekGrowth = {\n  orders: ((Math.random() - 0.5) * 20).toFixed(1),\n  revenue: ((Math.random() - 0.5) * 25).toFixed(1),\n  conversion: ((Math.random() - 0.5) * 1).toFixed(2)\n};\n\nconst report = {\n  ...salesData,\n  week_over_week: weekGrowth,\n  generated_at: new Date().toISOString()\n};\n\nreturn [{ json: report }];"
+      },
+      "name": "Generate Sales Report",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        460,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "management@yourstore.com",
+        "subject": "📊 Daily Sales Report - {{ $json.date }}",
+        "message": "=# Daily Sales Report\\n**Date**: {{ $json.date }}\\n\\n## 📈 Key Metrics\\n- **Total Orders**: {{ $json.total_orders }}\\n- **Total Revenue**: ${{ $json.total_revenue }}\\n- **Average Order Value**: ${{ $json.avg_order_value }}\\n- **Conversion Rate**: {{ $json.conversion_rate }}%\\n\\n## 👥 Customer Breakdown\\n- **New Customers**: {{ $json.new_customers }}\\n- **Returning Customers**: {{ $json.returning_customers }}\\n- **Customer Retention**: {{ ($json.returning_customers / ($json.new_customers + $json.returning_customers) * 100).toFixed(1) }}%\\n\\n## 🏆 Top Performing Products\\n{{ $json.top_products.map(product => `**${product.name}**: ${product.sales} sales, $${product.revenue} revenue`).join('\\n') }}\\n\\n## 📊 Traffic Sources\\n- **Organic**: {{ $json.traffic_sources.organic }}%\\n- **Paid Ads**: {{ $json.traffic_sources.paid }}%\\n- **Social Media**: {{ $json.traffic_sources.social }}%\\n- **Direct**: {{ $json.traffic_sources.direct }}%\\n- **Referral**: {{ $json.traffic_sources.referral }}%\\n\\n## 📈 Week-over-Week Growth\\n- **Orders**: {{ $json.week_over_week.orders > 0 ? '+' : '' }}{{ $json.week_over_week.orders }}%\\n- **Revenue**: {{ $json.week_over_week.revenue > 0 ? '+' : '' }}{{ $json.week_over_week.revenue }}%\\n- **Conversion**: {{ $json.week_over_week.conversion > 0 ? '+' : '' }}{{ $json.week_over_week.conversion }}%\\n\\n## 🎯 Action Items\\n{{ $json.conversion_rate < 2 ? '• Focus on conversion optimization\\n' : '' }}{{ $json.avg_order_value < 50 ? '• Implement upselling strategies\\n' : '' }}{{ $json.traffic_sources.organic < 30 ? '• Improve SEO efforts\\n' : '' }}{{ $json.week_over_week.revenue < 0 ? '• Investigate revenue decline\\n' : '' }}\\n\\n---\\n*Report generated automatically at {{ $json.generated_at }}*",
+        "options": {}
+      },
+      "name": "Send Sales Report",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        680,
+        800
+      ]
+    }
+  ],
+  "connections": {
+    "New Order Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Order": {
+      "main": [
+        [
+          {
+            "node": "Needs Review?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Inventory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Review?": {
+      "main": [
+        [
+          {
+            "node": "Send Review Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Inventory": {
+      "main": [
+        [
+          {
+            "node": "Low Stock?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Low Stock?": {
+      "main": [
+        [
+          {
+            "node": "Send Stock Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Sales Report": {
+      "main": [
+        [
+          {
+            "node": "Generate Sales Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Sales Report": {
+      "main": [
+        [
+          {
+            "node": "Send Sales Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "id": "sales-automation"
+}
