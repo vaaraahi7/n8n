@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # n8n Ecommerce Automation Platform
 
 Complete n8n setup for ecommerce automation including SEO, marketing, sales, social media, and customer communications.
@@ -178,3 +179,6 @@ For issues and questions:
 - HTTPS enforced
 - Rate limiting enabled
 - Regular security updates recommended
+=======
+# n8n
+>>>>>>> 602d1392eb18b6d9aa3db6793b32123600da656d
