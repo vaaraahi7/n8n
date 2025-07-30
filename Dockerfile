@@ -7,8 +7,8 @@ WORKDIR /home/node
 USER root
 RUN mkdir -p /home/node/.n8n/workflows /home/node/.n8n/credentials /opt/render/project/src/data
 
-# Install curl for health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Install curl for health checks (Alpine Linux uses apk)
+RUN apk add --no-cache curl
 
 # Copy workflows and configurations (only if they exist)
 COPY workflows/ /home/node/.n8n/workflows/
